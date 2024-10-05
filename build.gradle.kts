@@ -24,11 +24,21 @@ repositories {
 }
 
 dependencies {
+	// spring
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
 	implementation("org.springframework.boot:spring-boot-starter-web")
+
+	// kafka
 	implementation("org.springframework.kafka:spring-kafka")
+
+	// devtools
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+
+	// swagger
+	compileOnly("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
+	// tests
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.kafka:spring-kafka-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
