@@ -11,6 +11,7 @@ services:
     environment:
       - POSTGRES_USER=notification_manager
       - POSTGRES_PASSWORD=notification_manager
+      - POSTGRES_DB=notification_manager_db
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
