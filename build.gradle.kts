@@ -23,6 +23,7 @@ repositories {
 	mavenCentral()
 }
 
+val jpaVersion = "3.3.4"
 val lombokVersion = "1.18.34"
 val junitVersion = "5.8.1"
 val log4jVersion = "2.20.0"
@@ -44,7 +45,7 @@ dependencies {
 	implementation("com.github.ben-manes.caffeine:caffeine:$caffeineCacheVersion")
 
 	// db
-	implementation("org.springframework.boot:spring-boot-starter-jdbc")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.postgresql:postgresql:$postgresqlVersion")
 
 	// migrations
