@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 public class TextPlaceholderReplacingUtil {
 
-    public static String replaceAllPlaceholdersInText(String templatedText, Map<String, Object> params) {
+    public static String replaceAllPlaceholdersInText(String templatedText, Map<String, String> params) {
         StringBuilder message = new StringBuilder(templatedText);
         List<Object> valueList = new ArrayList<>();
 

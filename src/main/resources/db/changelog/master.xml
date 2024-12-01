@@ -6,8 +6,11 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.21.xsd">
 
     <include file="2024-10-23--01-init-notifications-schema.sql" relativeToChangelogFile="true"/>
-    <include file="2024-10-23--02-init-notification-event-table.sql" relativeToChangelogFile="true"/>
-    <include file="2024-10-23--03-init-notification-channel-table.sql" relativeToChangelogFile="true"/>
-    <include file="2024-10-23--04-init-notification-subscription-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-10-23--02-init-notification-event-type-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-10-23--03-init-notification-event-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-10-23--04-init-notification-channel-table.sql" relativeToChangelogFile="true"/>
     <include file="2024-10-23--05-init-notification-message-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-10-23--06-init-notification-subscription-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-11-30--01-init-placeholder-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-11-30--02-init-message-placeholder-table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
