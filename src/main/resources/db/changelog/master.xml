@@ -11,6 +11,15 @@
     <include file="2024-10-23--04-init-notification-channel-table.sql" relativeToChangelogFile="true"/>
     <include file="2024-10-23--05-init-notification-message-table.sql" relativeToChangelogFile="true"/>
     <include file="2024-10-23--06-init-notification-subscription-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-10-23--07-init-notification-send-history-table.sql" relativeToChangelogFile="true"/>
+
     <include file="2024-11-30--01-init-placeholder-table.sql" relativeToChangelogFile="true"/>
     <include file="2024-11-30--02-init-message-placeholder-table.sql" relativeToChangelogFile="true"/>
+
+    <include file="2024-12-03--01-fill-channels-dictionary-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-12-03--02-fill-event-type-dictionary-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-12-03--03-fill-placeholder-dictionary-table.sql" relativeToChangelogFile="true"/>
+    <include file="2024-12-03--04-notification-event-execute-timestamp-delete-not-null-constraint.sql" relativeToChangelogFile="true"/>
+    <include file="2024-12-03--05-notification-event-execute-cron-delete-not-null-constraint.sql" relativeToChangelogFile="true"/>
+    <include file="2024-12-03--06-notification-event-add-timezone-to-timestamp-execute-events.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

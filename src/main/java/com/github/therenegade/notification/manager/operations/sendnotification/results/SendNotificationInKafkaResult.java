@@ -1,5 +1,6 @@
 package com.github.therenegade.notification.manager.operations.sendnotification.results;
 
+import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationInKafkaRequest;
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

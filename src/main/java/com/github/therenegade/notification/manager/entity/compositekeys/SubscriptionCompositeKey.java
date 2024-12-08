@@ -13,6 +13,6 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class SubscriptionCompositeKey implements Serializable {
     private Integer userId;
-    private Integer notificationEvent;
+    private Integer eventType;
     private Integer notificationChannel;
 }

@@ -28,4 +28,8 @@ public class NotificationChannel {
         this.name = notificationChannelType.getName();
         this.alias = notificationChannelType;
     }
+
+    protected NotificationChannel() {
+
+    }
 }

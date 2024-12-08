@@ -1,5 +1,6 @@
 package com.github.therenegade.notification.manager.entity.enums;
 
+import com.github.therenegade.notification.manager.operations.placeholder.enums.GetPlaceholderInfoQueriedService;
 import lombok.Getter;
 
 @Getter

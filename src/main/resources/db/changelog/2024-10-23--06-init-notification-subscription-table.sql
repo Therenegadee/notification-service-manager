@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS notifications.subscription (
     notification_event_type_id integer not null,
     notification_channel_id integer not null,
     contact_value varchar not null unique,
-    FOREIGN KEY notification_event_type_id REFERENCES notifications.event_type(id),
-    FOREIGN KEY notification_channel_id REFERENCES notifications.channel(id),
+    FOREIGN KEY (notification_event_type_id) REFERENCES notifications.event_type(id),
+    FOREIGN KEY (notification_channel_id) REFERENCES notifications.channel(id),
     UNIQUE (user_id, notification_event_type_id, notification_channel_id)
 )
 --rollback DROP TABLE notifications.subscription CASCADE;

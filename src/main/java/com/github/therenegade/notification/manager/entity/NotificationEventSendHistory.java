@@ -3,6 +3,8 @@ package com.github.therenegade.notification.manager.entity;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -35,6 +37,7 @@ public class NotificationEventSendHistory {
     private NotificationEvent notificationEvent;
 
     @Column(name = "stage")
+    @Enumerated(EnumType.STRING)
     private NotificationSendStage stage;
 
     @Column(name = "sent_time")

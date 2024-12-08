@@ -1,7 +1,18 @@
 package com.github.therenegade.notification.manager.entity;
 
 import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,11 +37,13 @@ public class NotificationEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @Column(name = "alias")
     private String alias;
 
+    @Column(name = "name")
     private String name;
 
-    @OneToMany(mappedBy = "notificationEvent", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "notificationEvent")
     @Fetch(FetchMode.SUBSELECT)
     private List<NotificationMessage> messages;
 

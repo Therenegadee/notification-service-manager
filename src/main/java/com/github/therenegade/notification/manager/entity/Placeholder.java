@@ -33,4 +33,6 @@ public class Placeholder {
         this.value = placeholderType.getPlaceholderName();
         this.description = placeholderType.getDescription();
     }
+
+    protected Placeholder() {}
 }

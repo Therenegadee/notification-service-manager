@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS notifications.event (
     execute_cron varchar(100) not null,
     execute_timestamp timestamp not null,
     is_active boolean not null,
-    FOREIGN KEY event_type_id REFERENCES notifications.event_type (id)
+    FOREIGN KEY (event_type_id) REFERENCES notifications.event_type (id)
 );
 --rollback DROP TABLE notifications.event CASCADE;
 

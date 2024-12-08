@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public abstract class SendNotificationRequest {
+public abstract class SendNotificationInKafkaRequest {
     private final String recipientContactValue;
     private final String messageBody;
 }
