@@ -3,12 +3,15 @@ package com.github.therenegade.notification.manager.v1.service;
 import com.github.therenegade.notification.manager.dto.ResolvedPlaceholdersInformation;
 import com.github.therenegade.notification.manager.entity.NotificationEvent;
 import com.github.therenegade.notification.manager.entity.NotificationEventSendHistory;
+import com.github.therenegade.notification.manager.entity.NotificationEventSendHistoryError;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
+import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.entity.Subscription;
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
 import com.github.therenegade.notification.manager.exceptions.NoMessagesToSentExceptions;
 import com.github.therenegade.notification.manager.exceptions.NoSubscriptionsForEventException;
+import com.github.therenegade.notification.manager.exceptions.NotificationNotSentInKafkaException;
 import com.github.therenegade.notification.manager.exceptions.NotificationSendingErrorFinishedException;
 import com.github.therenegade.notification.manager.operations.sendnotification.SendTelegramNotificationInKafkaOperation;
 import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationInKafkaRequest;
@@ -27,9 +30,12 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -56,10 +62,13 @@ public class NotificationEventSendService {
         this.notificationEventSendHistoryRepository = notificationEventSendHistoryRepository;
     }
 
-    public List<SendNotificationInKafkaResult<? extends SendNotificationInKafkaRequest>> sendNotification(@NotNull NotificationEvent notificationEvent) {
+    public List<SendNotificationInKafkaResult<? extends SendNotificationInKafkaRequest>> sendNotification(
+            @NotNull NotificationEvent notificationEvent
+    ) {
         NotificationEventSendHistory sendHistory = NotificationEventSendHistory.builder()
                 .notificationEvent(notificationEvent)
                 .stage(NotificationSendStage.IN_PROCESS)
+                .sendingErrors(new HashSet<>())
                 .build();
         try {
             log.info("Starting of processing notification event with id = {}.", notificationEvent.getId());
@@ -89,9 +98,10 @@ public class NotificationEventSendService {
                 switch (notificationChannelType) {
                     case TELEGRAM ->
                             sentMessageResults.computeIfAbsent(notificationChannelType, map -> new ArrayList<>())
-                                    .addAll(sendTelegramNotification(notificationEvent,
+                                    .addAll(sendTelegramNotifications(notificationEvent,
                                             notificationChannelTypeMessages.get(notificationChannelType),
-                                            subscriptions.get(notificationChannelType))
+                                            subscriptions.get(notificationChannelType),
+                                            sendHistory)
                                     );
                 }
             }
@@ -101,93 +111,181 @@ public class NotificationEventSendService {
                     .flatMap(List::stream)
                     .toList();
 
-            sendHistory.setStage(NotificationSendStage.FINISHED_SUCCESSFULLY);
+            sendHistory.setStage(sendHistory.getSendingErrors().isEmpty()
+                    ? NotificationSendStage.FINISHED_SUCCESSFULLY
+                    : NotificationSendStage.FINISHED_PARTIALLY);
             sendHistory.setNotificationSentTime(OffsetDateTime.now());
             notificationEventSendHistoryRepository.save(sendHistory);
 
             return result;
         } catch (Exception exception) {
-            sendHistory.setStage(NotificationSendStage.ERROR_FINISHED);
-            notificationEventSendHistoryRepository.save(sendHistory);
-
             String errorMessage = String.format("Unexpected error was catched during sending the notififcation messages of" +
                     "\snotification event with id = %s. Original error message: %s.", notificationEvent.getId(), exception.getMessage());
             log.error("{}\nStackTrace: {}", errorMessage, ExceptionUtils.getStackTrace(exception));
+
+            var sendingError = buildNotificationEventSendHistoryError(exception, errorMessage);
+            sendHistory.addSendingError(sendingError);
+            sendHistory.setStage(NotificationSendStage.ERROR_FINISHED);
+            notificationEventSendHistoryRepository.save(sendHistory);
+
             throw new NotificationSendingErrorFinishedException(errorMessage, exception);
         }
     }
 
-    private List<SendNotificationInKafkaResult<SendTelegramNotificationInKafkaRequest>> sendTelegramNotification(
+    /**
+     * Operation of sending the notifications related to {@link NotificationChannelType#TELEGRAM} channel.
+     *
+     * @param notificationEvent   the notification event.
+     * @param notificationMessage the message of notification event related to this {@link NotificationChannelType#TELEGRAM} channel.
+     * @param subscriptions       the information about recipients' subscribed to this event and this {@link NotificationChannelType}.
+     * @param sendHistory         {@link NotificationEventSendHistory} to save the error in case it'll occur during sending notification.
+     * @return list of successfully sent notifications in Kafka.
+     */
+    private List<SendNotificationInKafkaResult<SendTelegramNotificationInKafkaRequest>> sendTelegramNotifications(
             NotificationEvent notificationEvent,
             NotificationMessage notificationMessage,
-            List<Subscription> subscriptions
+            List<Subscription> subscriptions,
+            NotificationEventSendHistory sendHistory
     ) {
         if (subscriptions.isEmpty()) {
             String errorMessage = String.format("There are no any subscriptions was found for event with id = %s.",
                     notificationEvent.getId());
             log.error(errorMessage);
-            throw new NoSubscriptionsForEventException(errorMessage); // todo add to errors
+            var sendingError = buildNotificationEventSendHistoryError(new NoSubscriptionsForEventException(errorMessage), errorMessage);
+            sendHistory.addSendingError(sendingError);
+            return Collections.emptyList();
         }
 
         List<Integer> userIds = subscriptions.stream()
                 .map(Subscription::getUserId)
                 .toList();
 
-        String message = notificationMessage.getMessage();
-
-        Map<Integer, String> messagesByUserId = new HashMap<>();
-        if (!notificationMessage.getPlaceholders().isEmpty()) {
-            log.debug("{} placeholders was found for notification event with id = {} (channel type is \"{}\").",
-                    notificationMessage.getPlaceholders().size(), notificationEvent.getId(), notificationMessage.getNotificationChannel().getAlias());
-            List<ResolvedPlaceholdersInformation> resolvedPlaceholdersInformation =
-                    placeholderResolver.resolvePlaceholders(notificationMessage.getPlaceholders(), userIds);
-            resolvedPlaceholdersInformation.forEach(info ->
-                    messagesByUserId.put(info.getRecipientId(), TextPlaceholderReplacingUtil.replaceAllPlaceholdersInText(message, info.getResolvedPlaceholderValues()))
-            );
-        } else {
-            log.debug("No placeholders were found for notification event with id = {} (channel type is \"{}\").",
-                    notificationEvent.getId(), notificationMessage.getNotificationChannel().getAlias());
-            userIds.forEach(userId -> messagesByUserId.put(userId, message));
-        }
+        Map<Integer, String> messagesByRecipientUserId = getPreparedMessagesByRecipientsIds(notificationMessage, userIds, notificationEvent);
 
         List<SendNotificationInKafkaResult<SendTelegramNotificationInKafkaRequest>> sendingResults = new ArrayList<>();
         log.info("Start sending the prepared messages to users with ids: {}.", Arrays.toString(userIds.toArray()));
         for (Subscription subscription : subscriptions) {
             try {
-                String contactValue = subscription.getContactValue();
-                String preparedMessage = messagesByUserId.get(subscription.getUserId());
-                log.info("Sending the prepared message of event with id {} to user with id = {} (contact value = {}). Prepared message: \"{}\"",
-                        notificationEvent.getId(), subscription.getUserId(), contactValue, preparedMessage);
+                String preparedMessage = messagesByRecipientUserId.get(subscription.getUserId());
+                var sendingResult = sendNotificationToTelegramSubscriber(subscription, preparedMessage, sendHistory, notificationEvent.getId());
 
-                var request = new SendTelegramNotificationInKafkaRequest(contactValue, preparedMessage);
-                var result = sendTelegramNotificationOperation.sendNotification(request);
-
-                if (result.isNotificationSent()) {
-                    log.info("The message of event with id = {} was successfully sent in {} channel to recipient with contact value \"{}\".",
-                            notificationEvent.getId(),
-                            NotificationChannelType.TELEGRAM.getName(),
-                            result.getSendResult().getProducerRecord().value().getRecipientContactValue());
-                } else {
-                    String errorMessage = String.format("""
-                                            Notification of event with id %s wasn't sent in Kafka topic of channel %s.
-                                            Error message: "%s";
-                                            Original exception class: %s;
-                                            StackTrace: %s
-                                            """, notificationEvent.getId(), NotificationChannelType.TELEGRAM.getName(),
-                            result.getErrorMessage(), result.getExceptionOccurred().getClass(),
-                            ExceptionUtils.getStackTrace(result.getExceptionOccurred()));
-                    log.error(errorMessage);
-//                          new NotificationNotSentInKafkaException(errorMessage, result.getExceptionOccurred()); // todo add to errors
+                if (Objects.nonNull(sendingResult)) {
+                    sendingResults.add(sendingResult);
                 }
 
-                sendingResults.add(result);
             } catch (Exception exception) {
-                String errorMessage = String.format("The error occurred while sending the messages of event with id = %s to recipient. Details: %s.",
-                        notificationEvent.getId(), exception.getMessage());
+                String errorMessage = String.format("The error occurred while sending the message of event with id = %s in %s channel" +
+                                "\sto recipient with userId = %s. Details: %s.", notificationEvent.getId(), NotificationChannelType.TELEGRAM,
+                        subscription.getUserId(), exception.getMessage());
                 log.error("{}\nStackTrace: {}", errorMessage, ExceptionUtils.getStackTrace(exception));
-//                      new NotificationNotSentInKafkaException(errorMessage, exception); // todo add to errors
+
+                var sendingError = buildNotificationEventSendHistoryError(
+                        new NotificationNotSentInKafkaException(errorMessage, exception), errorMessage
+                );
+                sendHistory.addSendingError(sendingError);
             }
         }
-        return sendingResults;
+        return sendingResults
+                .stream()
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /**
+     * Operation of sending the prepared message to separate recipient in {@link NotificationChannelType#TELEGRAM} channel.
+     *
+     * @param subscription        information about recipient's subscription which contains it's contact value.
+     * @param preparedMessage     the prepared message to send.
+     * @param sendHistory         {@link NotificationEventSendHistory} to save the error in case it'll occur during sending notification.
+     * @param notificationEventId identifier of {@link NotificationEvent}.
+     * @return the result of sending the notification in Kafka or {@code null} in case of sending error.
+     */
+    private SendNotificationInKafkaResult<SendTelegramNotificationInKafkaRequest> sendNotificationToTelegramSubscriber(
+            Subscription subscription,
+            String preparedMessage,
+            NotificationEventSendHistory sendHistory,
+            Integer notificationEventId
+    ) {
+        String contactValue = subscription.getContactValue();
+        log.info("Sending the prepared message of event with id {} to user with id = {} (contact value = {}). Prepared message: \"{}\"",
+                notificationEventId, subscription.getUserId(), contactValue, preparedMessage);
+
+        var sendNotificationRequest = new SendTelegramNotificationInKafkaRequest(contactValue, preparedMessage);
+        var sendNotificationResult = sendTelegramNotificationOperation.sendNotification(sendNotificationRequest);
+
+        if (sendNotificationResult.isNotificationSent()) {
+            log.info("The message of event with id = {} was successfully sent in {} channel to recipient with contact value \"{}\".",
+                    notificationEventId,
+                    NotificationChannelType.TELEGRAM.getName(),
+                    sendNotificationResult.getSendResult().getProducerRecord().value().getRecipientContactValue());
+            return sendNotificationResult;
+        } else {
+            String errorMessage = String.format("""
+                            Notification of event with id %s wasn't sent in Kafka topic of channel %s.
+                            Error message: "%s";
+                            Original exception class: %s;
+                            StackTrace: %s
+                            """, notificationEventId, NotificationChannelType.TELEGRAM.getName(),
+                    sendNotificationResult.getErrorMessage(), sendNotificationResult.getExceptionOccurred().getClass(),
+                    ExceptionUtils.getStackTrace(sendNotificationResult.getExceptionOccurred()));
+            log.error(errorMessage);
+
+            var sendingError = buildNotificationEventSendHistoryError(
+                    new NotificationNotSentInKafkaException(sendNotificationResult.getErrorMessage()), errorMessage
+            );
+            sendHistory.addSendingError(sendingError);
+
+            return null;
+        }
+    }
+
+    /**
+     * Creating the prepared messages for recipients.
+     * <p>
+     * In case the propagated {@link NotificationMessage} doesn't have any {@link Placeholder},
+     * then the templated message from this {@link NotificationMessage} will be used for all of the users.
+     *
+     * @param notificationMessage notification message with information about {@link Placeholder} and {@link NotificationChannelType}.
+     * @param userIds             recepients identifiers.
+     * @param notificationEvent   the event {@link NotificationMessage} belongs to.
+     * @return prepared messages by recipients ids.
+     */
+    private Map<Integer, String> getPreparedMessagesByRecipientsIds(NotificationMessage notificationMessage,
+                                                                    List<Integer> userIds,
+                                                                    NotificationEvent notificationEvent) {
+        String originalMessage = notificationMessage.getMessage();
+        Map<Integer, String> messagesByUserId = new HashMap<>();
+
+        if (!notificationMessage.getPlaceholders().isEmpty()) {
+            log.debug("{} placeholders was found for notification event with id = {} for channel type {}.",
+                    notificationMessage.getPlaceholders().size(), notificationEvent.getId(), notificationMessage.getNotificationChannel().getAlias());
+
+            List<ResolvedPlaceholdersInformation> resolvedPlaceholdersInformation =
+                    placeholderResolver.resolvePlaceholders(notificationMessage.getPlaceholders(), userIds);
+            resolvedPlaceholdersInformation.forEach(info ->
+                    messagesByUserId.put(
+                            info.getRecipientId(),
+                            TextPlaceholderReplacingUtil.replaceAllPlaceholdersInText(originalMessage, info.getResolvedPlaceholderValues())
+                    )
+            );
+
+        } else {
+            log.debug("No placeholders were found for notification event with id = {} (channel type is \"{}\").",
+                    notificationEvent.getId(), notificationMessage.getNotificationChannel().getAlias());
+            userIds.forEach(userId -> messagesByUserId.put(userId, originalMessage));
+        }
+        return messagesByUserId;
+    }
+
+    private NotificationEventSendHistoryError buildNotificationEventSendHistoryError(@NotNull Exception exception,
+                                                                                     @NotNull String message) {
+        String details = Objects.nonNull(exception.getCause())
+                ? exception.getCause().getMessage()
+                : exception.getMessage();
+        return NotificationEventSendHistoryError.builder()
+                .message(message)
+                .exceptionName(exception.getClass().getName())
+                .details(details)
+                .build();
     }
 }

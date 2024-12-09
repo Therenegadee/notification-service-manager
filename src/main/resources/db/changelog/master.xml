@@ -22,4 +22,6 @@
     <include file="2024-12-03--04-notification-event-execute-timestamp-delete-not-null-constraint.sql" relativeToChangelogFile="true"/>
     <include file="2024-12-03--05-notification-event-execute-cron-delete-not-null-constraint.sql" relativeToChangelogFile="true"/>
     <include file="2024-12-03--06-notification-event-add-timezone-to-timestamp-execute-events.sql" relativeToChangelogFile="true"/>
+
+    <include file="2024-12-09--01-init-event-send-history-errors-table.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
