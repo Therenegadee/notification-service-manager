@@ -10,10 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/notification/event")
@@ -23,6 +26,16 @@ public class NotificationEventController {
 
     private final NotificationEventService notificationEventService;
     private final NotificationEventMapper notificationEventMapper;
+
+    @Operation(summary = "Fetching all stored notification events.",
+            description = "The operation which fetches all stored notification events in the database."
+    )
+    @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<NotificationEventDTO>> getAllNotificationEvents() {
+        return ResponseEntity.ok(notificationEventService.findAll().stream()
+                .map(notificationEventMapper::toDto)
+                .toList());
+    }
 
     @Operation(summary = "Creation of timestamp scheduled notification event.",
             description = "The operation which creates the notification event which will be sent at specific timestamp.",

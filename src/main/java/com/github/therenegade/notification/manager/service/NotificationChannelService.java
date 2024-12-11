@@ -8,4 +8,6 @@ import java.util.List;
 public interface NotificationChannelService {
 
     List<NotificationChannel> findAll();
+
+    NotificationChannel findById(Integer id);
 }

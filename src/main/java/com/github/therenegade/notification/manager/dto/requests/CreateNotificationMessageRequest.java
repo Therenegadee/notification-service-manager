@@ -1,5 +1,6 @@
 package com.github.therenegade.notification.manager.dto.requests;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,6 +19,8 @@ import java.util.List;
 @Builder
 public class CreateNotificationMessageRequest {
 
+    @NotNull(message = "Notification Event's id couldn't be null!")
+    @Positive(message = "Notification Event's id couldn't be less or equals zero!")
     private Integer notificationEventId;
 
     @NotNull(message = "Message of Notification Event couldn't be null!")
@@ -28,5 +31,6 @@ public class CreateNotificationMessageRequest {
     @NotNull(message = "Notification Event Message's Target Channel Id couldn't be null!")
     private Integer notificationChannelId;
 
+    @Nullable
     private List<Integer> placeholdersIds;
 }
