@@ -27,6 +27,11 @@ public class NotificationEventServiceImpl implements NotificationEventService {
     private final NotificationEventTypeRepository notificationEventTypeRepository;
     private final NotificationMessageService notificationMessageService;
 
+    @Override
+    public List<NotificationEvent> findAll() {
+        return notificationEventRepository.findAll();
+    }
+
     @Transactional
     @Override
     public NotificationEvent createTimestampNotificationEvent(CreateTimestampNotificationEventRequest request) {
