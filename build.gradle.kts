@@ -40,6 +40,9 @@ dependencies {
 	// spring
 	implementation("org.springframework.boot:spring-boot-starter-web")
 
+	// validation
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+
 	// cache
 	implementation("org.springframework.boot:spring-boot-starter-cache")
 	implementation("com.github.ben-manes.caffeine:caffeine:$caffeineCacheVersion")
@@ -72,7 +75,7 @@ dependencies {
 	annotationProcessor("org.mapstruct:mapstruct-processor:$mapstructVersion")
 
 	// swagger
-	compileOnly("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion")
 
 	// utils
 	implementation("org.apache.commons:commons-lang3:$apacheCommonsVersion")

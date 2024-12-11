@@ -29,7 +29,11 @@ public class NotificationChannel {
         this.alias = notificationChannelType;
     }
 
-    protected NotificationChannel() {
+    public NotificationChannel(Integer id) {
+        this.id = id;
+    }
+
+    public NotificationChannel() {
 
     }
 }
