@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +39,8 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
     List<NotificationEvent> findAll(Specification<NotificationEvent> spec);
 
     static Specification<NotificationEvent> buildSpecification(@Nullable NotificationExecutionType executionType,
-                                                               @Nullable Boolean isActive) {
+                                                               @Nullable Boolean isActive,
+                                                               @Nullable OffsetDateTime beforeExecuteTimeStamp) {
         List<Specification<NotificationEvent>> specifications = new ArrayList<>();
 
         if (Objects.nonNull(executionType)) {
@@ -52,6 +54,13 @@ public interface NotificationEventRepository extends JpaRepository<NotificationE
             specifications.add(
                     (Specification<NotificationEvent>) (event, query, criteriaBuilder) ->
                             criteriaBuilder.equal(event.get("isActive"), isActive)
+            );
+        }
+
+        if (Objects.nonNull(beforeExecuteTimeStamp)) {
+            specifications.add(
+                    (Specification<NotificationEvent>) (event, query, criteriaBuilder) ->
+                            criteriaBuilder.lessThanOrEqualTo(event.get("executeTimestamp"), beforeExecuteTimeStamp)
             );
         }
         return specifications.stream().reduce(Specification::and).orElse(null);

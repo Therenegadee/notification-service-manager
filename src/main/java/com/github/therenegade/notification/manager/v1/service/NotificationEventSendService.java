@@ -8,22 +8,24 @@ import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.entity.Subscription;
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
+import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
 import com.github.therenegade.notification.manager.exceptions.sender.NoMessagesToSentExceptions;
 import com.github.therenegade.notification.manager.exceptions.sender.NoSubscriptionsForEventException;
 import com.github.therenegade.notification.manager.exceptions.sender.NotificationNotSentInKafkaException;
 import com.github.therenegade.notification.manager.exceptions.sender.NotificationSendingErrorFinishedException;
+import com.github.therenegade.notification.manager.repository.NotificationEventRepository;
+import com.github.therenegade.notification.manager.repository.NotificationEventSendHistoryRepository;
+import com.github.therenegade.notification.manager.repository.SubscriptionRepository;
+import com.github.therenegade.notification.manager.util.TextPlaceholderReplacingUtil;
 import com.github.therenegade.notification.manager.v1.sender.SendTelegramNotificationInKafkaService;
 import com.github.therenegade.notification.manager.v1.sender.requests.SendNotificationInKafkaRequest;
 import com.github.therenegade.notification.manager.v1.sender.requests.SendTelegramNotificationInKafkaRequest;
 import com.github.therenegade.notification.manager.v1.sender.results.SendNotificationInKafkaResult;
-import com.github.therenegade.notification.manager.repository.NotificationEventSendHistoryRepository;
-import com.github.therenegade.notification.manager.repository.SubscriptionRepository;
-import com.github.therenegade.notification.manager.util.TextPlaceholderReplacingUtil;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -36,30 +38,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class NotificationEventSendService {
 
     private final SendTelegramNotificationInKafkaService sendTelegramNotificationOperation;
     private final SubscriptionRepository subscriptionRepository;
     private final PlaceholderResolver placeholderResolver;
     private final NotificationEventSendHistoryRepository notificationEventSendHistoryRepository;
-    private final ExecutorService telegramSendNotificationsExecutor;
+    private final NotificationEventRepository notificationEventRepository;
 
-    public NotificationEventSendService(SendTelegramNotificationInKafkaService sendTelegramNotificationOperation,
-                                        SubscriptionRepository subscriptionRepository,
-                                        PlaceholderResolver placeholderResolver,
-                                        NotificationEventSendHistoryRepository notificationEventSendHistoryRepository,
-                                        @Qualifier("telegramSendNotificationsExecutor") ExecutorService telegramSendNotificationsExecutor) {
-        this.sendTelegramNotificationOperation = sendTelegramNotificationOperation;
-        this.subscriptionRepository = subscriptionRepository;
-        this.placeholderResolver = placeholderResolver;
-        this.telegramSendNotificationsExecutor = telegramSendNotificationsExecutor;
-        this.notificationEventSendHistoryRepository = notificationEventSendHistoryRepository;
-    }
 
     public List<SendNotificationInKafkaResult<? extends SendNotificationInKafkaRequest>> sendNotification(
             @NotNull NotificationEvent notificationEvent
@@ -116,6 +107,11 @@ public class NotificationEventSendService {
                     : NotificationSendStage.FINISHED_PARTIALLY);
             sendHistory.setFinishTime(OffsetDateTime.now());
             notificationEventSendHistoryRepository.save(sendHistory);
+
+            if (notificationEvent.getExecutionType().equals(NotificationExecutionType.TIMESTAMP)) {
+                notificationEvent.setIsActive(false);
+                notificationEventRepository.save(notificationEvent);
+            }
 
             return result;
         } catch (Exception exception) {

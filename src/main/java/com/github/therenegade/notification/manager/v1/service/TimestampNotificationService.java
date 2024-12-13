@@ -60,9 +60,9 @@ public class TimestampNotificationService implements ScheduledNotificationServic
         List<NotificationEvent> activeTimestampNotificationEvents = getActiveTimestampNotificationEvents();
 
         for (NotificationEvent notificationEvent : activeTimestampNotificationEvents) {
-            if (isNotificationNeedsToBeSentNow(notificationEvent.getExecuteTimestamp())) {
+//            if (isNotificationNeedsToBeSentNow(notificationEvent.getExecuteTimestamp())) {
                 CompletableFuture.runAsync(() -> notificationEventSendService.sendNotification(notificationEvent), scheduledExecutorService);
-            }
+//            }
         }
     }
 
@@ -74,8 +74,12 @@ public class TimestampNotificationService implements ScheduledNotificationServic
      * @return all active {@link NotificationEvent}.
      */
     private List<NotificationEvent> getActiveTimestampNotificationEvents() {
+        OffsetDateTime now = OffsetDateTime.now();
         List<NotificationEvent> activeTimestampNotificationEvents =
-                notificationEventRepository.findAll(NotificationEventRepository.buildSpecification(NotificationExecutionType.TIMESTAMP, true));
+                notificationEventRepository.findAll(NotificationEventRepository.buildSpecification(
+                        NotificationExecutionType.TIMESTAMP,
+                        true,
+                        now));
 
         List<Integer> eventsIds = activeTimestampNotificationEvents.stream()
                 .map(NotificationEvent::getId)
@@ -107,8 +111,8 @@ public class TimestampNotificationService implements ScheduledNotificationServic
     }
 
 
-    private boolean isNotificationNeedsToBeSentNow(OffsetDateTime notificationExecuteTimestamp) {
-        OffsetDateTime now = OffsetDateTime.now();
-        return notificationExecuteTimestamp.isBefore(now) || notificationExecuteTimestamp.isEqual(now);
-    }
+//    private boolean isNotificationNeedsToBeSentNow(OffsetDateTime notificationExecuteTimestamp) {
+//        OffsetDateTime now = OffsetDateTime.now();
+//        return notificationExecuteTimestamp.isBefore(now) || notificationExecuteTimestamp.isEqual(now);
+//    }
 }

@@ -44,7 +44,7 @@ public class SubscriptionController {
                     description = "The request to create notification event's subscription"
             )
     )
-    @PostMapping(value = "/timestamp", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SubscriptionDTO> createSubscription(@RequestBody CreateSubscriptionRequest request) {
         SubscriptionDTO createdSubscription = subscriptionMapper.toDto(subscriptionService.createSubscription(request));
         return ResponseEntity
