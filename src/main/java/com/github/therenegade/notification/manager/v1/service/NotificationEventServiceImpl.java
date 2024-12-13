@@ -6,7 +6,7 @@ import com.github.therenegade.notification.manager.entity.NotificationEvent;
 import com.github.therenegade.notification.manager.entity.NotificationEventType;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
-import com.github.therenegade.notification.manager.exceptions.NotFoundException;
+import com.github.therenegade.notification.manager.exceptions.rest.NotFoundException;
 import com.github.therenegade.notification.manager.repository.NotificationEventRepository;
 import com.github.therenegade.notification.manager.repository.NotificationEventTypeRepository;
 import com.github.therenegade.notification.manager.service.NotificationEventService;

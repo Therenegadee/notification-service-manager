@@ -5,7 +5,7 @@ import com.github.therenegade.notification.manager.entity.NotificationChannel;
 import com.github.therenegade.notification.manager.entity.NotificationEvent;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.Placeholder;
-import com.github.therenegade.notification.manager.exceptions.NotFoundException;
+import com.github.therenegade.notification.manager.exceptions.rest.NotFoundException;
 import com.github.therenegade.notification.manager.repository.NotificationChannelRepository;
 import com.github.therenegade.notification.manager.repository.NotificationMessageRepository;
 import com.github.therenegade.notification.manager.repository.PlaceholderRepository;

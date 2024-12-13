@@ -9,10 +9,10 @@ import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.entity.Subscription;
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
-import com.github.therenegade.notification.manager.exceptions.NoMessagesToSentExceptions;
-import com.github.therenegade.notification.manager.exceptions.NoSubscriptionsForEventException;
-import com.github.therenegade.notification.manager.exceptions.NotificationNotSentInKafkaException;
-import com.github.therenegade.notification.manager.exceptions.NotificationSendingErrorFinishedException;
+import com.github.therenegade.notification.manager.exceptions.sender.NoMessagesToSentExceptions;
+import com.github.therenegade.notification.manager.exceptions.sender.NoSubscriptionsForEventException;
+import com.github.therenegade.notification.manager.exceptions.sender.NotificationNotSentInKafkaException;
+import com.github.therenegade.notification.manager.exceptions.sender.NotificationSendingErrorFinishedException;
 import com.github.therenegade.notification.manager.v1.sender.SendTelegramNotificationInKafkaService;
 import com.github.therenegade.notification.manager.v1.sender.requests.SendNotificationInKafkaRequest;
 import com.github.therenegade.notification.manager.v1.sender.requests.SendTelegramNotificationInKafkaRequest;
@@ -66,6 +66,7 @@ public class NotificationEventSendService {
     ) {
         NotificationEventSendHistory sendHistory = NotificationEventSendHistory.builder()
                 .notificationEvent(notificationEvent)
+                .startTime(OffsetDateTime.now())
                 .stage(NotificationSendStage.IN_PROCESS)
                 .sendingErrors(new HashSet<>())
                 .build();
@@ -113,12 +114,12 @@ public class NotificationEventSendService {
             sendHistory.setStage(sendHistory.getSendingErrors().isEmpty()
                     ? NotificationSendStage.FINISHED_SUCCESSFULLY
                     : NotificationSendStage.FINISHED_PARTIALLY);
-            sendHistory.setNotificationSentTime(OffsetDateTime.now());
+            sendHistory.setFinishTime(OffsetDateTime.now());
             notificationEventSendHistoryRepository.save(sendHistory);
 
             return result;
         } catch (Exception exception) {
-            String errorMessage = String.format("Unexpected error was catched during sending the notififcation messages of" +
+            String errorMessage = String.format("Unexpected error was caught during sending the notification messages of" +
                     "\snotification event with id = %s. Original error message: %s.", notificationEvent.getId(), exception.getMessage());
             log.error("{}\nStackTrace: {}", errorMessage, ExceptionUtils.getStackTrace(exception));
 
@@ -193,7 +194,7 @@ public class NotificationEventSendService {
     /**
      * Operation of sending the prepared message to separate recipient in {@link NotificationChannelType#TELEGRAM} channel.
      *
-     * @param subscription        information about recipient's subscription which contains it's contact value.
+     * @param subscription        information about recipient's subscription which contains its contact value.
      * @param preparedMessage     the prepared message to send.
      * @param sendHistory         {@link NotificationEventSendHistory} to save the error in case it'll occur during sending notification.
      * @param notificationEventId identifier of {@link NotificationEvent}.
@@ -242,10 +243,10 @@ public class NotificationEventSendService {
      * Creating the prepared messages for recipients.
      * <p>
      * In case the propagated {@link NotificationMessage} doesn't have any {@link Placeholder},
-     * then the templated message from this {@link NotificationMessage} will be used for all of the users.
+     * then the templated message from this {@link NotificationMessage} will be used for all the users.
      *
      * @param notificationMessage notification message with information about {@link Placeholder} and {@link NotificationChannelType}.
-     * @param userIds             recepients identifiers.
+     * @param userIds             recipients identifiers.
      * @param notificationEvent   the event {@link NotificationMessage} belongs to.
      * @return prepared messages by recipients ids.
      */

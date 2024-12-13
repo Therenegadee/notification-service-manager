@@ -43,8 +43,11 @@ public class NotificationEventSendHistory {
     @Enumerated(EnumType.STRING)
     private NotificationSendStage stage;
 
-    @Column(name = "sent_time")
-    private OffsetDateTime notificationSentTime;
+    @Column(name = "start_Time")
+    private OffsetDateTime startTime;
+
+    @Column(name = "finish_time")
+    private OffsetDateTime finishTime;
 
     @OneToMany(mappedBy = "notificationEventSendHistory", cascade = CascadeType.ALL)
     private Set<NotificationEventSendHistoryError> sendingErrors;

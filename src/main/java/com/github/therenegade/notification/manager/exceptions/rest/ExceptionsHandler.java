@@ -1,7 +1,6 @@
-package com.github.therenegade.notification.manager.exceptions;
+package com.github.therenegade.notification.manager.exceptions.rest;
 
 import jakarta.validation.ConstraintViolationException;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,9 +17,7 @@ public class ExceptionsHandler {
     public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException exception) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse(ExceptionUtils.getMessage(exception).isEmpty()
-                        ? "Requested resource wasn't found!"
-                        : exception.getMessage()));
+                .body(new ErrorResponse(exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

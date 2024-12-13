@@ -1,8 +1,7 @@
 package com.github.therenegade.notification.manager.v1.service;
 
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
 import com.github.therenegade.notification.manager.entity.NotificationEventType;
-import com.github.therenegade.notification.manager.exceptions.NotFoundException;
+import com.github.therenegade.notification.manager.exceptions.rest.NotFoundException;
 import com.github.therenegade.notification.manager.repository.NotificationEventTypeRepository;
 import com.github.therenegade.notification.manager.service.NotificationEventTypeService;
 import lombok.RequiredArgsConstructor;
