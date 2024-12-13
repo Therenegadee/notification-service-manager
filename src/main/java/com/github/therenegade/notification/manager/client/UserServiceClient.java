@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.List;
  * Now this service is the imitation of requesting recipients' (users') data from external API.
  * In the project with real user service API it'd be done using GraphQL.
  */
+@Service
 @Slf4j
 public class UserServiceClient {
 

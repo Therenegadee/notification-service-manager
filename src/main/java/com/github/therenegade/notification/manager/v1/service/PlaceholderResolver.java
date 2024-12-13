@@ -68,7 +68,7 @@ public class PlaceholderResolver {
     private Map<Integer, ResolvedPlaceholdersInformation> resolveRecipientPlaceholderData(List<Placeholder> recipientPlaceholders,
                                                                                           List<Integer> recipientsIds) {
         UserServiceClient.GetRecipientsInformationRequest request = new UserServiceClient.GetRecipientsInformationRequest();
-        request.setRecipientsIds(request.getRecipientsIds());
+        request.setRecipientsIds(recipientsIds);
 
         Map<PlaceholderType, Placeholder> placeholdersByType = recipientPlaceholders.stream()
                 .collect(Collectors.toMap(Placeholder::getAlias, placeholder -> placeholder));
