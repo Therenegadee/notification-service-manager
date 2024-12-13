@@ -14,8 +14,8 @@ public class TextPlaceholderReplacingUtilTest {
     @Test
     void test() {
         // Given
-        String receiverNameParam = "receiver_name";
-        String receiverNameValue = "Bob";
+        String recipientNameParam = "recipient_name";
+        String recipientNameValue = "Bob";
         String senderNameParam = "sender_name";
         String senderNameValue = "John";
         String someGuyParam = "some_guy";
@@ -27,10 +27,10 @@ public class TextPlaceholderReplacingUtilTest {
                         Hi, ${%s}! I'm ${%s}. Yesterday I saw ${%s} and we went to eat some burgers at
                         ${%s}. It was really awful, so I don't think I'd go there any time. Bye, ${%s}!
                         """,
-                receiverNameParam, senderNameParam, someGuyParam, somePlaceParam, receiverNameParam);
+                recipientNameParam, senderNameParam, someGuyParam, somePlaceParam, recipientNameParam);
 
-        Map<String, Object> params = Map.of(
-                receiverNameParam, receiverNameValue,
+        Map<String, String> params = Map.of(
+                recipientNameParam, recipientNameValue,
                 senderNameParam, senderNameValue,
                 someGuyParam, someGuyValue,
                 somePlaceParam, somePlaceValue
@@ -44,6 +44,6 @@ public class TextPlaceholderReplacingUtilTest {
                 .isEqualTo(String.format("""
                         Hi, %s! I'm %s. Yesterday I saw %s and we went to eat some burgers at
                         %s. It was really awful, so I don't think I'd go there any time. Bye, %s!
-                        """, receiverNameValue, senderNameValue, someGuyValue, somePlaceValue, receiverNameValue));
+                        """, recipientNameValue, senderNameValue, someGuyValue, somePlaceValue, recipientNameValue));
     }
 }

@@ -8,3 +8,16 @@ spring:
     password: notification_manager
   liquibase:
     change-log: classpath:/db/changelog/master.xml
+
+integrations:
+  kafka:
+    cluster:
+      addresses: "localhost:29092,localhost:29093,localhost:29094"
+    telegram:
+      send:
+        topic: "send.telegram.notification"
+
+scheduler:
+  notifications:
+    timestamp:
+      scheduledSendTimeMs: 60000
