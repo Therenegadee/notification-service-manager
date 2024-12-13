@@ -1,4 +1,4 @@
-package com.github.therenegade.notification.manager.operations.placeholder;
+package com.github.therenegade.notification.manager.client;
 
 import jakarta.annotation.Nullable;
 import lombok.AllArgsConstructor;
@@ -7,23 +7,21 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static com.github.therenegade.notification.manager.operations.placeholder.GetRecipientsInformationOperation.*;
 
 /**
  * Now this service is the imitation of requesting recipients' (users') data from external API.
  * In the project with real user service API it'd be done using GraphQL.
  */
-@Service
-public class GetRecipientsInformationOperation extends AbstractGetPlaceholderNecessaryInformationOperation<GetRecipientsInformationRequest, GetRecipientsInformationResponse> {
+@Slf4j
+public class UserServiceClient {
 
-    @Override
-    public GetRecipientsInformationResponse execute(GetRecipientsInformationRequest request) {
-        return GetRecipientsInformationResponse.builder()
+    public List<GetRecipientsInformationResponse.RecipientInformation> fetchRecipientData(GetRecipientsInformationRequest request) {
+        /* Imitation of sending the request */
+        GetRecipientsInformationResponse getRecipientsInformationResponse = GetRecipientsInformationResponse.builder()
                 .recipientsInformation(request.getRecipientsIds()
                         .stream()
                         .map(recipientId -> GetRecipientsInformationResponse.RecipientInformation.builder()
@@ -34,7 +32,9 @@ public class GetRecipientsInformationOperation extends AbstractGetPlaceholderNec
                                 .build())
                         .toList())
                 .build();
-    }
+        /* */
+        return getRecipientsInformationResponse.getRecipientsInformation();
+         }
 
     @Data
     @Builder
@@ -42,7 +42,8 @@ public class GetRecipientsInformationOperation extends AbstractGetPlaceholderNec
     @Setter
     @AllArgsConstructor
     @NoArgsConstructor
-    public static class GetRecipientsInformationRequest extends GetPlaceholderInfoRequest {
+    public static class GetRecipientsInformationRequest {
+        private List<Integer> recipientsIds;
         private boolean isRecipientNameNecessary;
         private boolean isRecipientFullNameNecessary;
         private boolean isRecipientBirthdayNecessary;
@@ -53,7 +54,7 @@ public class GetRecipientsInformationOperation extends AbstractGetPlaceholderNec
     @AllArgsConstructor
     @NoArgsConstructor
     public static class GetRecipientsInformationResponse {
-        private List<RecipientInformation> recipientsInformation;
+        private List<GetRecipientsInformationResponse.RecipientInformation> recipientsInformation;
 
         @Data
         @Builder

@@ -13,13 +13,12 @@ import com.github.therenegade.notification.manager.exceptions.NoMessagesToSentEx
 import com.github.therenegade.notification.manager.exceptions.NoSubscriptionsForEventException;
 import com.github.therenegade.notification.manager.exceptions.NotificationNotSentInKafkaException;
 import com.github.therenegade.notification.manager.exceptions.NotificationSendingErrorFinishedException;
-import com.github.therenegade.notification.manager.operations.sendnotification.SendTelegramNotificationInKafkaOperation;
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationInKafkaRequest;
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendTelegramNotificationInKafkaRequest;
-import com.github.therenegade.notification.manager.operations.sendnotification.results.SendNotificationInKafkaResult;
+import com.github.therenegade.notification.manager.v1.sender.SendTelegramNotificationInKafkaService;
+import com.github.therenegade.notification.manager.v1.sender.requests.SendNotificationInKafkaRequest;
+import com.github.therenegade.notification.manager.v1.sender.requests.SendTelegramNotificationInKafkaRequest;
+import com.github.therenegade.notification.manager.v1.sender.results.SendNotificationInKafkaResult;
 import com.github.therenegade.notification.manager.repository.NotificationEventSendHistoryRepository;
 import com.github.therenegade.notification.manager.repository.SubscriptionRepository;
-import com.github.therenegade.notification.manager.service.PlaceholderResolver;
 import com.github.therenegade.notification.manager.util.TextPlaceholderReplacingUtil;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -44,13 +43,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class NotificationEventSendService {
 
-    private final SendTelegramNotificationInKafkaOperation sendTelegramNotificationOperation;
+    private final SendTelegramNotificationInKafkaService sendTelegramNotificationOperation;
     private final SubscriptionRepository subscriptionRepository;
     private final PlaceholderResolver placeholderResolver;
     private final NotificationEventSendHistoryRepository notificationEventSendHistoryRepository;
     private final ExecutorService telegramSendNotificationsExecutor;
 
-    public NotificationEventSendService(SendTelegramNotificationInKafkaOperation sendTelegramNotificationOperation,
+    public NotificationEventSendService(SendTelegramNotificationInKafkaService sendTelegramNotificationOperation,
                                         SubscriptionRepository subscriptionRepository,
                                         PlaceholderResolver placeholderResolver,
                                         NotificationEventSendHistoryRepository notificationEventSendHistoryRepository,

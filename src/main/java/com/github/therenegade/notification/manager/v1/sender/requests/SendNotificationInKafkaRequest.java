@@ -1,4 +1,4 @@
-package com.github.therenegade.notification.manager.operations.sendnotification.requests;
+package com.github.therenegade.notification.manager.v1.sender.requests;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
