@@ -1,6 +1,6 @@
 package com.github.therenegade.notification.manager.config;
 
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendTelegramNotificationInKafkaRequest;
+import com.github.therenegade.notification.manager.v1.sender.requests.SendTelegramNotificationInKafkaRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
