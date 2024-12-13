@@ -10,7 +10,7 @@ import com.github.therenegade.notification.manager.entity.Subscription;
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
-import com.github.therenegade.notification.manager.exceptions.sender.NoMessagesToSentExceptions;
+import com.github.therenegade.notification.manager.exceptions.sender.NoMessagesToSentException;
 import com.github.therenegade.notification.manager.exceptions.sender.NoSubscriptionsForEventException;
 import com.github.therenegade.notification.manager.exceptions.sender.NotificationNotSentInKafkaException;
 import com.github.therenegade.notification.manager.exceptions.sender.NotificationSendingErrorFinishedException;
@@ -67,10 +67,9 @@ public class NotificationEventSendService {
             notificationEventSendHistoryRepository.save(sendHistory);
 
             if (notificationEvent.getMessages().isEmpty()) {
-                log.warn("Notification event with id = {} has no any message to sent!", notificationEvent.getId());
                 String errorMessage = String.format("Notification event with id = %s has no message to sent!", notificationEvent.getId());
                 log.error(errorMessage);
-                throw new NoMessagesToSentExceptions(errorMessage);
+                throw new NoMessagesToSentException(errorMessage);
             }
 
             Map<NotificationChannelType, NotificationMessage> notificationChannelTypeMessages = notificationEvent.getMessages()
@@ -79,9 +78,15 @@ public class NotificationEventSendService {
 
             Set<NotificationChannelType> notificationChannelTypes = notificationChannelTypeMessages.keySet();
 
-            Map<NotificationChannelType, List<Subscription>> subscriptions =
-                    subscriptionRepository.findSubscriptionsByNotificationEventType(notificationEvent.getEventType().getId())
-                            .stream()
+            List<Subscription> eventSubscriptions = subscriptionRepository.findSubscriptionsByNotificationEventType(notificationEvent.getEventType().getId());
+            if (eventSubscriptions.isEmpty()) {
+                String errorMessage = String.format("There are no any subscriptions was found for event with id = %s.",
+                        notificationEvent.getId());
+                log.error(errorMessage);
+                throw new NoSubscriptionsForEventException(errorMessage);
+            }
+
+            Map<NotificationChannelType, List<Subscription>> subscriptionsByChannel = eventSubscriptions.stream()
                             .collect(Collectors.groupingBy(subscription -> subscription.getNotificationChannel().getAlias()));
 
             Map<NotificationChannelType, List<SendNotificationInKafkaResult<? extends SendNotificationInKafkaRequest>>> sentMessageResults = new HashMap<>();
@@ -91,7 +96,7 @@ public class NotificationEventSendService {
                             sentMessageResults.computeIfAbsent(notificationChannelType, map -> new ArrayList<>())
                                     .addAll(sendTelegramNotifications(notificationEvent,
                                             notificationChannelTypeMessages.get(notificationChannelType),
-                                            subscriptions.get(notificationChannelType),
+                                            subscriptionsByChannel.getOrDefault(notificationChannelType, new ArrayList<>()),
                                             sendHistory)
                                     );
                 }
@@ -144,8 +149,8 @@ public class NotificationEventSendService {
             NotificationEventSendHistory sendHistory
     ) {
         if (subscriptions.isEmpty()) {
-            String errorMessage = String.format("There are no any subscriptions was found for event with id = %s.",
-                    notificationEvent.getId());
+            String errorMessage = String.format("There are no any subscriptions was found for event with id = %s and %s channel.",
+                    notificationEvent.getId(), notificationMessage.getNotificationChannel().getAlias());
             log.error(errorMessage);
             var sendingError = buildNotificationEventSendHistoryError(new NoSubscriptionsForEventException(errorMessage), errorMessage);
             sendHistory.addSendingError(sendingError);

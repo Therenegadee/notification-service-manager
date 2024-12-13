@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum NotificationChannelType {
-    TELEGRAM("Telegram");
+    TELEGRAM("Telegram"),
+    EMAIL("Email");
     // other channels
 
     private final String name;

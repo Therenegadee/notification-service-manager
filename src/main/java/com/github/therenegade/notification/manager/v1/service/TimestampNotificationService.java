@@ -60,9 +60,7 @@ public class TimestampNotificationService implements ScheduledNotificationServic
         List<NotificationEvent> activeTimestampNotificationEvents = getActiveTimestampNotificationEvents();
 
         for (NotificationEvent notificationEvent : activeTimestampNotificationEvents) {
-//            if (isNotificationNeedsToBeSentNow(notificationEvent.getExecuteTimestamp())) {
                 CompletableFuture.runAsync(() -> notificationEventSendService.sendNotification(notificationEvent), scheduledExecutorService);
-//            }
         }
     }
 
@@ -109,10 +107,4 @@ public class TimestampNotificationService implements ScheduledNotificationServic
                         || notificationSendStagesByEventIds.get(event.getId()).equals(NotificationSendStage.NOT_STARTED))
                 .toList();
     }
-
-
-//    private boolean isNotificationNeedsToBeSentNow(OffsetDateTime notificationExecuteTimestamp) {
-//        OffsetDateTime now = OffsetDateTime.now();
-//        return notificationExecuteTimestamp.isBefore(now) || notificationExecuteTimestamp.isEqual(now);
-//    }
 }
