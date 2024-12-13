@@ -35,7 +35,7 @@ public class CreateTimestampNotificationEventRequest {
     @Schema(example = "This event notifies users about the new lecture opened.")
     private String description;
 
-    @Schema(example = "12")
+    @Schema(example = "2")
     @Positive(message = "Notification Event's Type Id couldn't be less or equals zero!")
     @NotNull(message = "Notification Event's Type Id couldn't be null!")
     private Integer notificationEventTypeId;
@@ -64,7 +64,7 @@ public class CreateTimestampNotificationEventRequest {
         @NotNull(message = "Notification Event Message's Target Channel Id couldn't be null!")
         private Integer notificationChannelId;
 
-        @Schema(example = "[1,2,3]")
+        @Schema(example = "[2]")
         @ArraySchema(schema = @Schema(type = "integer"))
         private List<Integer> placeholdersIds;
     }

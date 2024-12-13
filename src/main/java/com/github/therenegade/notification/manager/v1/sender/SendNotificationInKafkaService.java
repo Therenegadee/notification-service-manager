@@ -1,8 +1,8 @@
-package com.github.therenegade.notification.manager.operations.sendnotification;
+package com.github.therenegade.notification.manager.v1.sender;
 
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationInKafkaRequest;
-import com.github.therenegade.notification.manager.operations.sendnotification.results.SendNotificationInKafkaResult;
+import com.github.therenegade.notification.manager.v1.sender.requests.SendNotificationInKafkaRequest;
+import com.github.therenegade.notification.manager.v1.sender.results.SendNotificationInKafkaResult;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,14 +16,14 @@ import java.util.Objects;
  *
  * @param <T> type of request to send the notification message.
  */
-public abstract class SendNotificationInKafkaOperation<T extends SendNotificationInKafkaRequest> {
+public abstract class SendNotificationInKafkaService<T extends SendNotificationInKafkaRequest> {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
     protected final KafkaTemplate<String, T> kafkaProducer;
     protected final NotificationChannelType notificationChannelType;
 
-    public SendNotificationInKafkaOperation(KafkaTemplate<String, T> kafkaProducer,
-                                            NotificationChannelType notificationChannelType) {
+    public SendNotificationInKafkaService(KafkaTemplate<String, T> kafkaProducer,
+                                          NotificationChannelType notificationChannelType) {
         this.kafkaProducer = kafkaProducer;
         this.notificationChannelType = notificationChannelType;
     }

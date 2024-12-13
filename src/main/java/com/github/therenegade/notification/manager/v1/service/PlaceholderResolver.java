@@ -1,11 +1,10 @@
 package com.github.therenegade.notification.manager.v1.service;
 
+import com.github.therenegade.notification.manager.client.UserServiceClient;
 import com.github.therenegade.notification.manager.dto.ResolvedPlaceholdersInformation;
 import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.entity.enums.PlaceholderType;
-import com.github.therenegade.notification.manager.operations.placeholder.GetRecipientsInformationOperation;
-import com.github.therenegade.notification.manager.operations.placeholder.enums.GetPlaceholderInfoQueriedService;
-import com.github.therenegade.notification.manager.service.PlaceholderResolver;
+import com.github.therenegade.notification.enums.QueriedServiceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,32 +19,40 @@ import java.util.stream.Collectors;
 import static com.github.therenegade.notification.manager.entity.enums.PlaceholderType.RECIPIENT_BIRTHDAY;
 import static com.github.therenegade.notification.manager.entity.enums.PlaceholderType.RECIPIENT_FULL_NAME;
 import static com.github.therenegade.notification.manager.entity.enums.PlaceholderType.RECIPIENT_NAME;
-import static com.github.therenegade.notification.manager.operations.placeholder.GetRecipientsInformationOperation.*;
-import static com.github.therenegade.notification.manager.operations.placeholder.GetRecipientsInformationOperation.GetRecipientsInformationResponse.*;
 
+/**
+ * Resolver of {@link com.github.therenegade.notification.manager.entity.NotificationMessage} placeholders.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PlaceholderResolverImpl implements PlaceholderResolver {
+public class PlaceholderResolver {
 
-    private final GetRecipientsInformationOperation getRecipientsInformationOperation;
-    // other operations declaration
+    private final UserServiceClient userServiceClient;
 
-    @Override
+
+    /**
+     * Placeholder resolve function which aggregates all placeholders by service needs to be requested to fetch the information,
+     * sends these requests and then aggregates all placeholders with their values by recipients.
+     *
+     * @param placeholders  placeholders to resolve.
+     * @param recipientsIds ids of recipients.
+     * @return information about placeholders' values for each recipient.
+     */
     public List<ResolvedPlaceholdersInformation> resolvePlaceholders(List<Placeholder> placeholders,
                                                                      List<Integer> recipientsIds) {
-        Map<GetPlaceholderInfoQueriedService, List<Placeholder>> requestsByServices = placeholders
+        Map<QueriedServiceType, List<Placeholder>> requestsByServices = placeholders
                 .stream()
                 .collect(Collectors.groupingBy(placeholder -> placeholder.getAlias().getQueriedService()));
 
         List<Map<Integer, ResolvedPlaceholdersInformation>> resolvedPlaceholdersInformation = new ArrayList<>();
-        for (GetPlaceholderInfoQueriedService queriedService : requestsByServices.keySet()) {
-            Map<Integer, ResolvedPlaceholdersInformation> resolvedPlaceholders = switch (queriedService) {
-                case RECIPIENT_USER_SERVICE ->
-                        resolvePlaceholdersAboutRecipient(requestsByServices.get(queriedService), recipientsIds);
+        requestsByServices.forEach((queriedService, placeholderList) -> {
+            Map<Integer, ResolvedPlaceholdersInformation> serviceResolvedPlaceholderData = switch (queriedService) {
+                case RECIPIENT_USER_SERVICE -> resolveRecipientPlaceholderData(placeholderList, recipientsIds);
             };
-            resolvedPlaceholdersInformation.add(resolvedPlaceholders);
-        }
+            resolvedPlaceholdersInformation.add(serviceResolvedPlaceholderData);
+
+        });
 
         Map<Integer, ResolvedPlaceholdersInformation> mergedMap = new HashMap<>();
         for (Map<Integer, ResolvedPlaceholdersInformation> resolvedPlaceholdersByUserId : resolvedPlaceholdersInformation) {
@@ -58,11 +65,12 @@ public class PlaceholderResolverImpl implements PlaceholderResolver {
         return mergedMap.values().stream().toList();
     }
 
-    private Map<Integer, ResolvedPlaceholdersInformation> resolvePlaceholdersAboutRecipient(List<Placeholder> placeholderToResolve,
-                                                                                            List<Integer> recipientsIds) {
-        GetRecipientsInformationRequest request = new GetRecipientsInformationRequest();
-        request.setRecipientsIds(recipientsIds);
-        Map<PlaceholderType, Placeholder> placeholdersByType = placeholderToResolve.stream()
+    private Map<Integer, ResolvedPlaceholdersInformation> resolveRecipientPlaceholderData(List<Placeholder> recipientPlaceholders,
+                                                                                          List<Integer> recipientsIds) {
+        UserServiceClient.GetRecipientsInformationRequest request = new UserServiceClient.GetRecipientsInformationRequest();
+        request.setRecipientsIds(request.getRecipientsIds());
+
+        Map<PlaceholderType, Placeholder> placeholdersByType = recipientPlaceholders.stream()
                 .collect(Collectors.toMap(Placeholder::getAlias, placeholder -> placeholder));
         placeholdersByType.keySet()
                 .forEach(placeholderType -> {
@@ -74,15 +82,18 @@ public class PlaceholderResolverImpl implements PlaceholderResolver {
                                 log.warn("The incorrect type of placeholder which couldn't be resolved: {}.", placeholderType);
                     }
                 });
-        Map<Integer, RecipientInformation> recipientInformationById = getRecipientsInformationOperation.execute(request)
-                .getRecipientsInformation()
+
+        List<UserServiceClient.GetRecipientsInformationResponse.RecipientInformation> recipientsInformation = userServiceClient.fetchRecipientData(request);
+
+        Map<Integer, UserServiceClient.GetRecipientsInformationResponse.RecipientInformation> recipientInformationById = recipientsInformation
                 .stream()
-                .collect(Collectors.toMap(RecipientInformation::getRecipientId, recipientInformation -> recipientInformation));
+                .collect(Collectors.toMap(UserServiceClient.GetRecipientsInformationResponse.RecipientInformation::getRecipientId, recipientInformation -> recipientInformation));
+
         return recipientInformationById.entrySet()
                 .stream()
                 .map(entry -> {
                     Integer recipientId = entry.getKey();
-                    RecipientInformation recipientInformation = entry.getValue();
+                    UserServiceClient.GetRecipientsInformationResponse.RecipientInformation recipientInformation = entry.getValue();
                     Map<String, String> resolvedServicePlaceholders = new HashMap<>();
                     Optional.ofNullable(recipientInformation.getRecipientName())
                             .ifPresent(recipientName -> resolvedServicePlaceholders.put(placeholdersByType.get(RECIPIENT_NAME).getValue(), recipientName));
@@ -96,5 +107,6 @@ public class PlaceholderResolverImpl implements PlaceholderResolver {
                             .build();
                 })
                 .collect(Collectors.toMap(ResolvedPlaceholdersInformation::getRecipientId, resolvedPlaceholdersInformation -> resolvedPlaceholdersInformation));
+
     }
 }
