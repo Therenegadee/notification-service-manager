@@ -47,7 +47,6 @@ public class NotificationEvent {
     private List<NotificationMessage> messages;
 
     @ManyToOne
-    @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "event_type_id", referencedColumnName = "id")
     private NotificationEventType eventType;
 
