@@ -33,4 +33,10 @@ public class Placeholder {
         this.value = placeholderType.getPlaceholderName();
         this.description = placeholderType.getDescription();
     }
+
+    public Placeholder(Integer id) {
+        this.id = id;
+    }
+
+    public Placeholder() {}
 }

@@ -28,4 +28,12 @@ public class NotificationChannel {
         this.name = notificationChannelType.getName();
         this.alias = notificationChannelType;
     }
+
+    public NotificationChannel(Integer id) {
+        this.id = id;
+    }
+
+    public NotificationChannel() {
+
+    }
 }

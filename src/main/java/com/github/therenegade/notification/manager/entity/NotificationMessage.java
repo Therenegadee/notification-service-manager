@@ -14,7 +14,6 @@ import java.util.List;
 
 @Entity
 @Table(name = "message", schema = "notifications")
-@IdClass(NotificationMessageCompositeKey.class)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -38,10 +37,10 @@ public class NotificationMessage {
 
     private String message;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.REFRESH})
     @Fetch(FetchMode.SUBSELECT)
     @JoinTable(schema = "notifications", name = "notification_message_placeholder",
-            joinColumns = @JoinColumn(name = "placeholder_id"),
-            inverseJoinColumns = @JoinColumn(name = "notification_message_id"))
+            joinColumns = @JoinColumn(name = "notification_message_id"),
+            inverseJoinColumns = @JoinColumn(name = "placeholder_id"))
     private List<Placeholder> placeholders;
 }

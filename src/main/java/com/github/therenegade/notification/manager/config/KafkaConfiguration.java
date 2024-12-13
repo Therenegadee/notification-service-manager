@@ -1,6 +1,6 @@
 package com.github.therenegade.notification.manager.config;
 
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendTelegramNotificationRequest;
+import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendTelegramNotificationInKafkaRequest;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,12 +21,12 @@ public class KafkaConfiguration {
     @Value("${integrations.kafka.cluster.addresses}")
     private String bootstrapAddresses;
 
-    @Value("integrations.kafka.telegram.send.topic")
+    @Value("${integrations.kafka.telegram.send.topic}")
     private String sendTelegramNotificationTopic;
 
     @Bean("sendTelegramNotificationProducer")
-    public KafkaTemplate<String, SendTelegramNotificationRequest> sendTelegramNotificationProducer() {
-        KafkaTemplate<String, SendTelegramNotificationRequest> kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(getKafkaProducerConfig()));
+    public KafkaTemplate<String, SendTelegramNotificationInKafkaRequest> sendTelegramNotificationProducer() {
+        KafkaTemplate<String, SendTelegramNotificationInKafkaRequest> kafkaTemplate = new KafkaTemplate<>(new DefaultKafkaProducerFactory<>(getKafkaProducerConfig()));
         kafkaTemplate.setDefaultTopic(sendTelegramNotificationTopic);
         return kafkaTemplate;
     }
@@ -38,6 +38,7 @@ public class KafkaConfiguration {
         config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
         return config;
     }
 }

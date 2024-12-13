@@ -21,7 +21,6 @@ import org.hibernate.annotations.FetchMode;
 
 @Entity
 @Table(name = "subscription", schema = "notifications")
-@IdClass(SubscriptionCompositeKey.class)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -33,17 +32,14 @@ public class Subscription {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Id
     @Column(name = "user_id")
     private Integer userId;
 
-    @Id
     @ManyToOne(fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "notification_event_type_id", referencedColumnName = "id")
     private NotificationEventType eventType;
 
-    @Id
     @ManyToOne(fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
     @JoinColumn(name = "notification_channel_id", referencedColumnName = "id")

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,20 +37,23 @@ public class PlaceholderResolverImpl implements PlaceholderResolver {
         Map<GetPlaceholderInfoQueriedService, List<Placeholder>> requestsByServices = placeholders
                 .stream()
                 .collect(Collectors.groupingBy(placeholder -> placeholder.getAlias().getQueriedService()));
-        List<Map<Integer, ResolvedPlaceholdersInformation>> resolvedPlaceholdersInformation = requestsByServices.keySet()
-                .stream()
-                .map(queriedService -> switch (queriedService) {
-                    case RECIPIENT_USER_SERVICE -> resolvePlaceholdersAboutRecipient(requestsByServices.get(queriedService), recipientsIds);
-                })
-                .toList();
+
+        List<Map<Integer, ResolvedPlaceholdersInformation>> resolvedPlaceholdersInformation = new ArrayList<>();
+        for (GetPlaceholderInfoQueriedService queriedService : requestsByServices.keySet()) {
+            Map<Integer, ResolvedPlaceholdersInformation> resolvedPlaceholders = switch (queriedService) {
+                case RECIPIENT_USER_SERVICE ->
+                        resolvePlaceholdersAboutRecipient(requestsByServices.get(queriedService), recipientsIds);
+            };
+            resolvedPlaceholdersInformation.add(resolvedPlaceholders);
+        }
+
         Map<Integer, ResolvedPlaceholdersInformation> mergedMap = new HashMap<>();
-        resolvedPlaceholdersInformation
-                .forEach(map -> map
-                        .forEach((key, value) -> {
-                            mergedMap.computeIfAbsent(key, mapping -> new ResolvedPlaceholdersInformation(key, new HashMap<>()));
-                            mergedMap.get(key).getResolvedPlaceholderValues()
-                                    .putAll(value.getResolvedPlaceholderValues());
-                        }));
+        for (Map<Integer, ResolvedPlaceholdersInformation> resolvedPlaceholdersByUserId : resolvedPlaceholdersInformation) {
+            resolvedPlaceholdersByUserId.forEach((key, value) -> {
+                mergedMap.computeIfAbsent(key, mapping -> new ResolvedPlaceholdersInformation(key, new HashMap<>()));
+                mergedMap.get(key).getResolvedPlaceholderValues().putAll(value.getResolvedPlaceholderValues());
+            });
+        }
 
         return mergedMap.values().stream().toList();
     }
@@ -59,16 +63,15 @@ public class PlaceholderResolverImpl implements PlaceholderResolver {
         GetRecipientsInformationRequest request = new GetRecipientsInformationRequest();
         request.setRecipientsIds(recipientsIds);
         Map<PlaceholderType, Placeholder> placeholdersByType = placeholderToResolve.stream()
-                        .collect(Collectors.toMap(Placeholder::getAlias, placeholder -> placeholder));
+                .collect(Collectors.toMap(Placeholder::getAlias, placeholder -> placeholder));
         placeholdersByType.keySet()
                 .forEach(placeholderType -> {
                     switch (placeholderType) {
                         case RECIPIENT_NAME -> request.setRecipientNameNecessary(true);
                         case RECIPIENT_FULL_NAME -> request.setRecipientFullNameNecessary(true);
                         case RECIPIENT_BIRTHDAY -> request.setRecipientBirthdayNecessary(true);
-                        default -> {
-                            log.warn("The incorrect type."); // todo detalize
-                        }
+                        default ->
+                                log.warn("The incorrect type of placeholder which couldn't be resolved: {}.", placeholderType);
                     }
                 });
         Map<Integer, RecipientInformation> recipientInformationById = getRecipientsInformationOperation.execute(request)

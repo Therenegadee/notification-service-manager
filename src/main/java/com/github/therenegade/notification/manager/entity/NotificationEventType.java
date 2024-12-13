@@ -7,11 +7,14 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "event", schema = "notifications")
+@Table(name = "event_type", schema = "notifications")
 @Getter
 public class NotificationEventType {
 
@@ -28,4 +31,10 @@ public class NotificationEventType {
         this.alias = eventTypeEnum;
         this.description = eventTypeEnum.getDescription();
     }
+
+    public NotificationEventType(Integer id) {
+        this.id = id;
+    }
+
+    public NotificationEventType() {}
 }

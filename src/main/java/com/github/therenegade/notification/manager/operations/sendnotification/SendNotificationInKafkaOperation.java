@@ -1,7 +1,7 @@
 package com.github.therenegade.notification.manager.operations.sendnotification;
 
 import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
-import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationRequest;
+import com.github.therenegade.notification.manager.operations.sendnotification.requests.SendNotificationInKafkaRequest;
 import com.github.therenegade.notification.manager.operations.sendnotification.results.SendNotificationInKafkaResult;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -11,28 +11,31 @@ import org.springframework.kafka.support.SendResult;
 
 import java.util.Objects;
 
-public abstract class SendNotificationOperation<T extends SendNotificationRequest> {
+/**
+ * Abstract sender of notifications in Kafka topics which will be read by Notification Sender Service.
+ *
+ * @param <T> type of request to send the notification message.
+ */
+public abstract class SendNotificationInKafkaOperation<T extends SendNotificationInKafkaRequest> {
 
     protected Logger log = LoggerFactory.getLogger(getClass());
     protected final KafkaTemplate<String, T> kafkaProducer;
     protected final NotificationChannelType notificationChannelType;
 
-    public SendNotificationOperation(KafkaTemplate<String, T> kafkaProducer,
-                                     NotificationChannelType notificationChannelType) {
+    public SendNotificationInKafkaOperation(KafkaTemplate<String, T> kafkaProducer,
+                                            NotificationChannelType notificationChannelType) {
         this.kafkaProducer = kafkaProducer;
         this.notificationChannelType = notificationChannelType;
     }
 
     public SendNotificationInKafkaResult<T> sendNotification(T request) {
-        log.info("Sending prepared notification message (target channel: {}) in Kafka Topic \"{}\"." +
-                        "\sPayload information:\nRecipient: {};\nMessage: {}.", notificationChannelType.getName(),
+        log.info("Sending prepared notification message in Kafka Topic \"{}\". Recipient: {}. Message: {}.",
                 kafkaProducer.getDefaultTopic(), request.getRecipientContactValue(), request.getMessageBody());
         try {
             SendResult<String, T> sendResult = kafkaProducer.send(kafkaProducer.getDefaultTopic(), request).join();
             if (Objects.isNull(sendResult)) {
                 String errorMessage = String.format("The result of sending the prepared notification message was null!" +
-                                "\sVery probably the message wasn't sent in Kafka. Target Channel: %s. Kafka Topic: %s.\sPayload information:" +
-                                "\nRecipient: %s;\nMessage: %s.", notificationChannelType.getName(),
+                                "\sVery probably the message wasn't sent in Kafka. Kafka Topic: %s. Recipient: %s. Message: %s.",
                         kafkaProducer.getDefaultTopic(), request.getRecipientContactValue(), request.getMessageBody());
                 log.error(errorMessage);
                 return SendNotificationInKafkaResult.<T>builder()
@@ -48,11 +51,10 @@ public abstract class SendNotificationOperation<T extends SendNotificationReques
                     .sendResult(sendResult)
                     .build();
         } catch (Exception exception) {
-            String errorMessage = String.format("The error occurred when trying to send the prepared notification message" +
-                            "\s(target channel: %s) in Kafka Topic \"%s\". Original Error Message: %s.", notificationChannelType.getName(),
-                    kafkaProducer.getDefaultTopic(), ExceptionUtils.getMessage(exception));
+            String errorMessage = String.format("The error occurred when trying to send the prepared notification message." +
+                    "Kafka Topic: %s. Original Error Message: %s.", kafkaProducer.getDefaultTopic(), ExceptionUtils.getMessage(exception));
             log.error(errorMessage + "\nStackTrace: {}", ExceptionUtils.getStackTrace(exception));
-            // think it'd be a good solution to send the error message in audit kafka topic
+            // for future i think it'd be a good solution to send the error message in audit kafka topic
             return SendNotificationInKafkaResult.<T>builder()
                     .isNotificationSent(false)
                     .errorMessage(errorMessage)
