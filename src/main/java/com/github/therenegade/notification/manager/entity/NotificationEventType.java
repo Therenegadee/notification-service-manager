@@ -32,5 +32,9 @@ public class NotificationEventType {
         this.description = eventTypeEnum.getDescription();
     }
 
-    protected NotificationEventType() {}
+    public NotificationEventType(Integer id) {
+        this.id = id;
+    }
+
+    public NotificationEventType() {}
 }

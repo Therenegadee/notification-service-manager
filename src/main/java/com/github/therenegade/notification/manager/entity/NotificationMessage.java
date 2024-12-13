@@ -37,7 +37,7 @@ public class NotificationMessage {
 
     private String message;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.REFRESH})
     @Fetch(FetchMode.SUBSELECT)
     @JoinTable(schema = "notifications", name = "notification_message_placeholder",
             joinColumns = @JoinColumn(name = "notification_message_id"),

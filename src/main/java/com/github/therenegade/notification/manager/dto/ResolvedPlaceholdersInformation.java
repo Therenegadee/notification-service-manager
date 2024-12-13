@@ -1,6 +1,5 @@
 package com.github.therenegade.notification.manager.dto;
 
-import com.github.therenegade.notification.manager.entity.Placeholder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
