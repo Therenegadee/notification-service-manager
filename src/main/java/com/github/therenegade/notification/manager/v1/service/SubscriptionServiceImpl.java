@@ -1,13 +1,12 @@
 package com.github.therenegade.notification.manager.v1.service;
 
-import com.github.therenegade.notification.manager.dto.SubscriptionDTO;
 import com.github.therenegade.notification.manager.dto.requests.CreateSubscriptionRequest;
-import com.github.therenegade.notification.manager.entity.NotificationChannel;
-import com.github.therenegade.notification.manager.entity.NotificationEventType;
+import com.github.therenegade.notification.manager.entity.DistributionChannel;
+import com.github.therenegade.notification.manager.entity.NotificationType;
 import com.github.therenegade.notification.manager.entity.Subscription;
 import com.github.therenegade.notification.manager.repository.SubscriptionRepository;
-import com.github.therenegade.notification.manager.service.NotificationChannelService;
-import com.github.therenegade.notification.manager.service.NotificationEventTypeService;
+import com.github.therenegade.notification.manager.service.DistributionChannelService;
+import com.github.therenegade.notification.manager.service.NotificationTypeService;
 import com.github.therenegade.notification.manager.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +20,8 @@ import java.util.List;
 public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
-    private final NotificationChannelService notificationChannelService;
-    private final NotificationEventTypeService notificationEventTypeService;
+    private final DistributionChannelService distributionChannelService;
+    private final NotificationTypeService notificationTypeService;
 
     @Override
     public List<Subscription> findAll() {
@@ -34,14 +33,14 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         log.info("Start process of creation the subscription. [User ID: {}; Event Type: {}; Channel Id: {}; Contact Value: {}]",
                 request.getUserId(), request.getNotificationEventTypeId(), request.getNotificationChannelId(), request.getContactValue());
 
-        NotificationChannel notificationChannel = notificationChannelService.findById(request.getNotificationChannelId());
-        NotificationEventType notificationEventType = notificationEventTypeService.findById(request.getNotificationEventTypeId());
+        DistributionChannel distributionChannel = distributionChannelService.findById(request.getNotificationChannelId());
+        NotificationType notificationType = notificationTypeService.findById(request.getNotificationEventTypeId());
 
         Subscription subscription = Subscription.builder()
                 .userId(request.getUserId())
                 .contactValue(request.getContactValue())
-                .eventType(notificationEventType)
-                .notificationChannel(notificationChannel)
+                .eventType(notificationType)
+                .distributionChannel(distributionChannel)
                 .build();
 
         subscription = subscriptionRepository.save(subscription);

@@ -2,7 +2,7 @@ package com.github.therenegade.notification.manager.v1.controller;
 
 import com.github.therenegade.notification.manager.dto.NotificationEventTypeDTO;
 import com.github.therenegade.notification.manager.mapper.NotificationEventTypeMapper;
-import com.github.therenegade.notification.manager.service.NotificationEventTypeService;
+import com.github.therenegade.notification.manager.service.NotificationTypeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationEventTypeController {
 
-    private final NotificationEventTypeService notificationEventTypeService;
+    private final NotificationTypeService notificationTypeService;
     private final NotificationEventTypeMapper notificationEventTypeMapper;
 
     @Operation(summary = "Fetching all stored notification events' types.",
@@ -29,7 +29,7 @@ public class NotificationEventTypeController {
     )
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<NotificationEventTypeDTO>> getAllNotificationEventTypes() {
-        return ResponseEntity.ok(notificationEventTypeService.findAll()
+        return ResponseEntity.ok(notificationTypeService.findAll()
                 .stream()
                 .map(notificationEventTypeMapper::toDto)
                 .toList());
@@ -40,6 +40,6 @@ public class NotificationEventTypeController {
     )
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<NotificationEventTypeDTO> getNotificationEventTypeById(@PathVariable(name = "id") Integer id) {
-        return ResponseEntity.ok(notificationEventTypeMapper.toDto(notificationEventTypeService.findById(id)));
+        return ResponseEntity.ok(notificationEventTypeMapper.toDto(notificationTypeService.findById(id)));
     }
 }

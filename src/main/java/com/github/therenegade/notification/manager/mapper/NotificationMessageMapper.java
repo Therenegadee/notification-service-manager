@@ -1,9 +1,8 @@
 package com.github.therenegade.notification.manager.mapper;
 
 import com.github.therenegade.notification.manager.dto.NotificationMessageDTO;
-import com.github.therenegade.notification.manager.entity.NotificationChannel;
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
-import com.github.therenegade.notification.manager.entity.NotificationEventType;
+import com.github.therenegade.notification.manager.entity.DistributionChannel;
+import com.github.therenegade.notification.manager.entity.Notification;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.Placeholder;
 import org.mapstruct.BeanMapping;
@@ -36,23 +35,23 @@ public interface NotificationMessageMapper {
                                       @MappingTarget NotificationMessage notificationMessage);
 
     @Named("convertEventToId")
-    default Integer convertEventToId(NotificationEvent event) {
+    default Integer convertEventToId(Notification event) {
         return event.getId();
     }
 
     @Named("convertEventIdToEntity")
-    default NotificationEvent convertEventIdToEntity(Integer eventId) {
-        return NotificationEvent.builder().id(eventId).build();
+    default Notification convertEventIdToEntity(Integer eventId) {
+        return Notification.builder().id(eventId).build();
     }
 
     @Named("convertNotificationChannelToId")
-    default Integer convertNotificationChannelToId(NotificationChannel channel) {
+    default Integer convertNotificationChannelToId(DistributionChannel channel) {
         return channel.getId();
     }
 
     @Named("convertNotificationChannelIdToEntity")
-    default NotificationChannel convertNotificationChannelIdToEntity(Integer channelId) {
-        return new NotificationChannel(channelId);
+    default DistributionChannel convertNotificationChannelIdToEntity(Integer channelId) {
+        return new DistributionChannel(channelId);
     }
 
     @Named("convertPlaceholdersToIds")

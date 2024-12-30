@@ -21,7 +21,7 @@ import org.hibernate.annotations.FetchMode;
 import java.util.List;
 
 @Entity
-@Table(name = "message", schema = "notifications")
+@Table(name = "notification_message", schema = "notifications")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -35,13 +35,13 @@ public class NotificationMessage {
 
     @ManyToOne
     @Fetch(FetchMode.JOIN)
-    @JoinColumn(name = "notification_event_id")
-    private NotificationEvent notificationEvent;
+    @JoinColumn(name = "notification_id")
+    private Notification notification;
 
     @ManyToOne
     @Fetch(FetchMode.JOIN)
-    @JoinColumn(name = "notification_channel_id")
-    private NotificationChannel notificationChannel;
+    @JoinColumn(name = "distribution_channel_id")
+    private DistributionChannel distributionChannel;
 
     private String message;
 

@@ -3,7 +3,7 @@ package com.github.therenegade.notification.manager.v1.controller;
 import com.github.therenegade.notification.manager.dto.NotificationEventDTO;
 import com.github.therenegade.notification.manager.dto.requests.CreateTimestampNotificationEventRequest;
 import com.github.therenegade.notification.manager.mapper.NotificationEventMapper;
-import com.github.therenegade.notification.manager.service.NotificationEventService;
+import com.github.therenegade.notification.manager.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationEventController {
 
-    private final NotificationEventService notificationEventService;
+    private final NotificationService notificationService;
     private final NotificationEventMapper notificationEventMapper;
 
     @Operation(summary = "Fetching all stored notification events.",
@@ -32,7 +32,7 @@ public class NotificationEventController {
     )
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<NotificationEventDTO>> getAllNotificationEvents() {
-        return ResponseEntity.ok(notificationEventService.findAll().stream()
+        return ResponseEntity.ok(notificationService.findAll().stream()
                 .map(notificationEventMapper::toDto)
                 .toList());
     }
@@ -48,7 +48,7 @@ public class NotificationEventController {
     public ResponseEntity<NotificationEventDTO> createTimestampNotificationEvent(
             @RequestBody CreateTimestampNotificationEventRequest request
     ) {
-        NotificationEventDTO createdEvent = notificationEventMapper.toDto(notificationEventService.createTimestampNotificationEvent(request));
+        NotificationEventDTO createdEvent = notificationEventMapper.toDto(notificationService.createTimestampNotificationEvent(request));
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(createdEvent);

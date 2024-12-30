@@ -1,12 +1,12 @@
 package com.github.therenegade.notification.manager.v1.service;
 
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
-import com.github.therenegade.notification.manager.entity.NotificationEventSendHistory;
+import com.github.therenegade.notification.manager.entity.Notification;
+import com.github.therenegade.notification.manager.entity.NotificationSendQueue;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
 import com.github.therenegade.notification.manager.entity.enums.NotificationSendStage;
-import com.github.therenegade.notification.manager.repository.NotificationEventRepository;
-import com.github.therenegade.notification.manager.repository.NotificationEventSendHistoryRepository;
+import com.github.therenegade.notification.manager.repository.NotificationRepository;
+import com.github.therenegade.notification.manager.repository.NotificationSendQueueRepository;
 import com.github.therenegade.notification.manager.repository.NotificationMessageRepository;
 import com.github.therenegade.notification.manager.service.ScheduledNotificationService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,24 +29,24 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TimestampNotificationService implements ScheduledNotificationService {
 
-    private final NotificationEventRepository notificationEventRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationMessageRepository notificationMessageRepository;
-    private final NotificationEventSendHistoryRepository notificationEventSendHistoryRepository;
-    private final NotificationEventSendService notificationEventSendService;
+    private final NotificationSendQueueRepository notificationSendQueueRepository;
+    private final NotificationSendService notificationSendService;
     private final ScheduledExecutorService scheduledExecutorService;
 
     @Value("${scheduler.notifications.timestamp.scheduledSendTimeMs}")
     private int scheduledSendTimeMs;
 
-    public TimestampNotificationService(NotificationEventRepository notificationEventRepository,
+    public TimestampNotificationService(NotificationRepository notificationRepository,
                                         NotificationMessageRepository notificationMessageRepository,
-                                        NotificationEventSendHistoryRepository notificationEventSendHistoryRepository,
-                                        NotificationEventSendService notificationEventSendService,
+                                        NotificationSendQueueRepository notificationSendQueueRepository,
+                                        NotificationSendService notificationSendService,
                                         @Qualifier("timestampNotificationsScheduledExecutor") ScheduledExecutorService scheduledExecutorService) {
-        this.notificationEventRepository = notificationEventRepository;
+        this.notificationRepository = notificationRepository;
         this.notificationMessageRepository = notificationMessageRepository;
-        this.notificationEventSendHistoryRepository = notificationEventSendHistoryRepository;
-        this.notificationEventSendService = notificationEventSendService;
+        this.notificationSendQueueRepository = notificationSendQueueRepository;
+        this.notificationSendService = notificationSendService;
         this.scheduledExecutorService = scheduledExecutorService;
     }
 
@@ -57,52 +57,52 @@ public class TimestampNotificationService implements ScheduledNotificationServic
     }
 
     private void sendTimestampNotifications() {
-        List<NotificationEvent> activeTimestampNotificationEvents = getActiveTimestampNotificationEvents();
+        List<Notification> activeTimestampNotifications = getActiveTimestampNotificationEvents();
 
-        for (NotificationEvent notificationEvent : activeTimestampNotificationEvents) {
-                CompletableFuture.runAsync(() -> notificationEventSendService.sendNotification(notificationEvent), scheduledExecutorService);
+        for (Notification notification : activeTimestampNotifications) {
+                CompletableFuture.runAsync(() -> notificationSendService.sendNotification(notification), scheduledExecutorService);
         }
     }
 
     /**
-     * Fetching the {@link NotificationEvent} which are an active and have no record in {@link NotificationEventSendHistory}
+     * Fetching the {@link Notification} which are an active and have no record in {@link NotificationSendQueue}
      * with one of the statuses as follows: {@link NotificationSendStage#FINISHED_PARTIALLY}, {@link NotificationSendStage#FINISHED_SUCCESSFULLY},
      * {@link NotificationSendStage#ERROR_FINISHED}, {@link NotificationSendStage#IN_PROCESS}.
      *
-     * @return all active {@link NotificationEvent}.
+     * @return all active {@link Notification}.
      */
-    private List<NotificationEvent> getActiveTimestampNotificationEvents() {
+    private List<Notification> getActiveTimestampNotificationEvents() {
         OffsetDateTime now = OffsetDateTime.now();
-        List<NotificationEvent> activeTimestampNotificationEvents =
-                notificationEventRepository.findAll(NotificationEventRepository.buildSpecification(
+        List<Notification> activeTimestampNotifications =
+                notificationRepository.findAll(NotificationRepository.buildSpecification(
                         NotificationExecutionType.TIMESTAMP,
                         true,
                         now));
 
-        List<Integer> eventsIds = activeTimestampNotificationEvents.stream()
-                .map(NotificationEvent::getId)
+        List<Integer> eventsIds = activeTimestampNotifications.stream()
+                .map(Notification::getId)
                 .toList();
 
         Map<Integer, List<NotificationMessage>> notificationMessagesByEventsIds = notificationMessageRepository.findAll(NotificationMessageRepository.buildSpecification(eventsIds))
                 .stream()
-                .collect(Collectors.groupingBy(msg -> msg.getNotificationEvent().getId()));
+                .collect(Collectors.groupingBy(msg -> msg.getNotification().getId()));
 
-        for (NotificationEvent notificationEvent : activeTimestampNotificationEvents) {
-            List<NotificationMessage> notificationEventMessages = notificationMessagesByEventsIds.getOrDefault(notificationEvent.getId(), new ArrayList<>());
+        for (Notification notification : activeTimestampNotifications) {
+            List<NotificationMessage> notificationEventMessages = notificationMessagesByEventsIds.getOrDefault(notification.getId(), new ArrayList<>());
             if (notificationEventMessages.isEmpty()) {
-                log.warn("No messages were found for event with id = {}.", notificationEvent.getId());
+                log.warn("No messages were found for event with id = {}.", notification.getId());
                 continue;
             }
-            notificationEvent.setMessages(notificationEventMessages);
-            notificationEventMessages.forEach(msg -> msg.setNotificationEvent(notificationEvent));
+            notification.setMessages(notificationEventMessages);
+            notificationEventMessages.forEach(msg -> msg.setNotification(notification));
         }
 
         Map<Integer, NotificationSendStage> notificationSendStagesByEventIds =
-                notificationEventSendHistoryRepository.findAllTimestampScheduledEvents(eventsIds)
+                notificationSendQueueRepository.findAllTimestampScheduledEvents(eventsIds)
                         .stream()
-                        .collect(Collectors.toMap(history -> history.getNotificationEvent().getId(), NotificationEventSendHistory::getStage));
+                        .collect(Collectors.toMap(history -> history.getNotification().getId(), NotificationSendQueue::getStage));
 
-        return activeTimestampNotificationEvents.stream()
+        return activeTimestampNotifications.stream()
                 .filter(event -> !notificationSendStagesByEventIds.containsKey(event.getId())
                         || notificationSendStagesByEventIds.get(event.getId()).equals(NotificationSendStage.NOT_STARTED))
                 .toList();

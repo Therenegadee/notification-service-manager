@@ -1,6 +1,6 @@
 package com.github.therenegade.notification.manager.dto;
 
-import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
+import com.github.therenegade.notification.manager.entity.enums.DistributionChannelType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,5 +17,5 @@ public class NotificationChannelDTO {
 
     private String name;
 
-    private NotificationChannelType alias;
+    private DistributionChannelType alias;
 }

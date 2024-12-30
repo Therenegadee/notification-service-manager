@@ -1,8 +1,6 @@
 package com.github.therenegade.notification.manager.repository;
 
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
-import com.github.therenegade.notification.manager.entity.enums.NotificationExecutionType;
 import jakarta.annotation.Nullable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,7 +15,7 @@ import java.util.Objects;
 @Repository
 public interface NotificationMessageRepository extends JpaRepository<NotificationMessage, Integer>, JpaSpecificationExecutor<NotificationMessage> {
 
-    @EntityGraph(attributePaths = {"notificationEvent.eventType", "notificationChannel", "placeholders"})
+    @EntityGraph(attributePaths = {"notification.eventType", "distributionChannel", "placeholders"})
     @Override
     List<NotificationMessage> findAll(Specification<NotificationMessage> spec);
 
@@ -27,7 +25,7 @@ public interface NotificationMessageRepository extends JpaRepository<Notificatio
         if (Objects.nonNull(eventsIds) && !eventsIds.isEmpty()) {
             specifications.add(
                     (Specification<NotificationMessage>) (message, query, criteriaBuilder) ->
-                            message.get("notificationEvent").get("id").in(eventsIds)
+                            message.get("notification").get("id").in(eventsIds)
             );
         }
         return specifications.stream().reduce(Specification::and).orElse(null);

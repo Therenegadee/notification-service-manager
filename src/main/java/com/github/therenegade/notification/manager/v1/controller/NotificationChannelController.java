@@ -1,16 +1,14 @@
 package com.github.therenegade.notification.manager.v1.controller;
 
 import com.github.therenegade.notification.manager.dto.NotificationChannelDTO;
-import com.github.therenegade.notification.manager.dto.NotificationEventTypeDTO;
 import com.github.therenegade.notification.manager.mapper.NotificationChannelMapper;
-import com.github.therenegade.notification.manager.service.NotificationChannelService;
+import com.github.therenegade.notification.manager.service.DistributionChannelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationChannelController {
 
-    private final NotificationChannelService notificationChannelService;
+    private final DistributionChannelService distributionChannelService;
     private final NotificationChannelMapper notificationChannelMapper;
 
     @Operation(summary = "Fetching all stored channels of notifications distribution.",
@@ -30,7 +28,7 @@ public class NotificationChannelController {
     )
     @GetMapping(value = "/all", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<NotificationChannelDTO>> getAllNotificationChannels() {
-        return ResponseEntity.ok(notificationChannelService.findAll()
+        return ResponseEntity.ok(distributionChannelService.findAll()
                 .stream()
                 .map(notificationChannelMapper::toDto)
                 .toList());

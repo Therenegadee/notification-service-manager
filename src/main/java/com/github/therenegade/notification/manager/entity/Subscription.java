@@ -35,13 +35,13 @@ public class Subscription {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
-    @JoinColumn(name = "notification_event_type_id", referencedColumnName = "id")
-    private NotificationEventType eventType;
+    @JoinColumn(name = "notification_type_id", referencedColumnName = "id")
+    private NotificationType eventType;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @Fetch(FetchMode.JOIN)
-    @JoinColumn(name = "notification_channel_id", referencedColumnName = "id")
-    private NotificationChannel notificationChannel;
+    @JoinColumn(name = "distribution_channel_id", referencedColumnName = "id")
+    private DistributionChannel distributionChannel;
 
     @Column(name = "contact_value")
     private String contactValue;

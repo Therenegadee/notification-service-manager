@@ -1,6 +1,6 @@
 package com.github.therenegade.notification.manager.v1.sender;
 
-import com.github.therenegade.notification.manager.entity.enums.NotificationChannelType;
+import com.github.therenegade.notification.manager.entity.enums.DistributionChannelType;
 import com.github.therenegade.notification.manager.v1.sender.requests.SendNotificationInKafkaRequest;
 import com.github.therenegade.notification.manager.v1.sender.results.SendNotificationInKafkaResult;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -20,12 +20,12 @@ public abstract class SendNotificationInKafkaService<T extends SendNotificationI
 
     protected Logger log = LoggerFactory.getLogger(getClass());
     protected final KafkaTemplate<String, T> kafkaProducer;
-    protected final NotificationChannelType notificationChannelType;
+    protected final DistributionChannelType distributionChannelType;
 
     public SendNotificationInKafkaService(KafkaTemplate<String, T> kafkaProducer,
-                                          NotificationChannelType notificationChannelType) {
+                                          DistributionChannelType distributionChannelType) {
         this.kafkaProducer = kafkaProducer;
-        this.notificationChannelType = notificationChannelType;
+        this.distributionChannelType = distributionChannelType;
     }
 
     public SendNotificationInKafkaResult<T> sendNotification(T request) {

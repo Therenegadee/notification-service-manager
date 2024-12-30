@@ -1,7 +1,7 @@
 package com.github.therenegade.notification.manager.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.therenegade.notification.manager.entity.enums.NotificationEventTypeEnum;
+import com.github.therenegade.notification.manager.entity.enums.NotificationTypeEnum;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +20,7 @@ public class NotificationEventTypeDTO {
     @Schema(example = "1")
     private Integer id;
 
-    private NotificationEventTypeEnum alias;
+    private NotificationTypeEnum alias;
 
     @Schema(example = "Commercial Event")
     private String description;

@@ -1,12 +1,12 @@
 package com.github.therenegade.notification.manager.v1.service;
 
 import com.github.therenegade.notification.manager.dto.requests.CreateNotificationMessageRequest;
-import com.github.therenegade.notification.manager.entity.NotificationChannel;
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
+import com.github.therenegade.notification.manager.entity.DistributionChannel;
+import com.github.therenegade.notification.manager.entity.Notification;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.exceptions.rest.NotFoundException;
-import com.github.therenegade.notification.manager.repository.NotificationChannelRepository;
+import com.github.therenegade.notification.manager.repository.DistributionChannelRepository;
 import com.github.therenegade.notification.manager.repository.NotificationMessageRepository;
 import com.github.therenegade.notification.manager.repository.PlaceholderRepository;
 import com.github.therenegade.notification.manager.service.NotificationMessageService;
@@ -24,13 +24,13 @@ import java.util.List;
 public class NotificationMessageServiceImpl implements NotificationMessageService {
 
     private final NotificationMessageRepository notificationMessageRepository;
-    private final NotificationChannelRepository notificationChannelRepository;
+    private final DistributionChannelRepository distributionChannelRepository;
     private final PlaceholderRepository placeholderRepository;
 
     @Override
     @Transactional
     public NotificationMessage createNotificationMessage(CreateNotificationMessageRequest request) {
-        NotificationChannel notificationChannel = notificationChannelRepository.findById(request.getNotificationChannelId())
+        DistributionChannel distributionChannel = distributionChannelRepository.findById(request.getNotificationChannelId())
                 .orElseThrow(() -> {
                     String errorMessage = "Notification Channel with id = " + request.getNotificationChannelId() + " wasn't found!";
                     log.error(errorMessage);
@@ -39,8 +39,8 @@ public class NotificationMessageServiceImpl implements NotificationMessageServic
         log.info("Start process of creation the notification event's message. [Event Id: {}; Notification Channel Id: {}; Message: \"{}\"]",
                 request.getNotificationEventId(), request.getNotificationChannelId(), request.getMessage());
         NotificationMessage notificationMessage = NotificationMessage.builder()
-                .notificationEvent(NotificationEvent.builder().id(request.getNotificationEventId()).build())
-                .notificationChannel(notificationChannel)
+                .notification(Notification.builder().id(request.getNotificationEventId()).build())
+                .distributionChannel(distributionChannel)
                 .message(request.getMessage())
                 .build();
         if (!request.getPlaceholdersIds().isEmpty()) {

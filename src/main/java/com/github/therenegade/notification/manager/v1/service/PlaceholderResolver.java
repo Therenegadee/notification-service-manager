@@ -4,7 +4,7 @@ import com.github.therenegade.notification.manager.client.UserServiceClient;
 import com.github.therenegade.notification.manager.dto.ResolvedPlaceholdersInformation;
 import com.github.therenegade.notification.manager.entity.Placeholder;
 import com.github.therenegade.notification.manager.entity.enums.PlaceholderType;
-import com.github.therenegade.notification.enums.QueriedServiceType;
+import com.github.therenegade.notification.manager.entity.enums.QueriedServiceType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

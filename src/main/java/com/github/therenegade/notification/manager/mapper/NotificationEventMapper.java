@@ -1,8 +1,8 @@
 package com.github.therenegade.notification.manager.mapper;
 
 import com.github.therenegade.notification.manager.dto.NotificationEventDTO;
-import com.github.therenegade.notification.manager.entity.NotificationEvent;
-import com.github.therenegade.notification.manager.entity.NotificationEventType;
+import com.github.therenegade.notification.manager.entity.Notification;
+import com.github.therenegade.notification.manager.entity.NotificationType;
 import com.github.therenegade.notification.manager.entity.NotificationMessage;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -21,24 +21,24 @@ public interface NotificationEventMapper {
 
     @Mapping(source = "notificationEventTypeId", target = "eventType", qualifiedByName = "convertEventTypeIdToEntity")
     @Mapping(source = "notificationMessagesIds", target = "messages", qualifiedByName = "convertMessagesIdsToEntities")
-    NotificationEvent toEntity(NotificationEventDTO notificationEventDTO);
+    Notification toEntity(NotificationEventDTO notificationEventDTO);
 
     @Mapping(source = "eventType", target = "notificationEventTypeId", qualifiedByName = "convertEventTypeToId")
     @Mapping(source = "messages", target = "notificationMessagesIds", qualifiedByName = "convertMessagesToIds")
-    NotificationEventDTO toDto(NotificationEvent notificationEvent);
+    NotificationEventDTO toDto(Notification notification);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    NotificationEvent partialUpdate(NotificationEventDTO notificationEventDTO,
-                                    @MappingTarget NotificationEvent notificationEvent);
+    Notification partialUpdate(NotificationEventDTO notificationEventDTO,
+                               @MappingTarget Notification notification);
 
     @Named("convertEventTypeToId")
-    default Integer convertEventTypeToId(NotificationEventType eventType) {
+    default Integer convertEventTypeToId(NotificationType eventType) {
         return eventType.getId();
     }
 
     @Named("convertEventTypeIdToEntity")
-    default NotificationEventType convertEventTypeIdToEntity(Integer eventTypeId) {
-        return new NotificationEventType(eventTypeId);
+    default NotificationType convertEventTypeIdToEntity(Integer eventTypeId) {
+        return new NotificationType(eventTypeId);
     }
 
     @Named("convertMessagesToIds")

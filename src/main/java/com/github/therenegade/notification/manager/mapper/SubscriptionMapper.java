@@ -1,8 +1,8 @@
 package com.github.therenegade.notification.manager.mapper;
 
 import com.github.therenegade.notification.manager.dto.SubscriptionDTO;
-import com.github.therenegade.notification.manager.entity.NotificationChannel;
-import com.github.therenegade.notification.manager.entity.NotificationEventType;
+import com.github.therenegade.notification.manager.entity.DistributionChannel;
+import com.github.therenegade.notification.manager.entity.NotificationType;
 import com.github.therenegade.notification.manager.entity.Subscription;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -29,22 +29,22 @@ public interface SubscriptionMapper {
     Subscription partialUpdate(SubscriptionDTO subscriptionDTO, @MappingTarget Subscription subscription);
 
     @Named("convertEventTypeToId")
-    default Integer convertEventTypeToId(NotificationEventType eventType) {
+    default Integer convertEventTypeToId(NotificationType eventType) {
         return eventType.getId();
     }
 
     @Named("convertEventTypeIdToEntity")
-    default NotificationEventType convertEventTypeIdToEntity(Integer eventTypeId) {
-        return new NotificationEventType(eventTypeId);
+    default NotificationType convertEventTypeIdToEntity(Integer eventTypeId) {
+        return new NotificationType(eventTypeId);
     }
 
     @Named("convertNotificationChannelToId")
-    default Integer convertNotificationChannelToId(NotificationChannel channel) {
+    default Integer convertNotificationChannelToId(DistributionChannel channel) {
         return channel.getId();
     }
 
     @Named("convertNotificationChannelIdToEntity")
-    default NotificationChannel convertNotificationChannelIdToEntity(Integer channelId) {
-        return new NotificationChannel(channelId);
+    default DistributionChannel convertNotificationChannelIdToEntity(Integer channelId) {
+        return new DistributionChannel(channelId);
     }
 }

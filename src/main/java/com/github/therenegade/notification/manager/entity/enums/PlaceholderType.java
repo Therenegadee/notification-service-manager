@@ -1,6 +1,5 @@
 package com.github.therenegade.notification.manager.entity.enums;
 
-import com.github.therenegade.notification.enums.QueriedServiceType;
 import lombok.Getter;
 
 @Getter
